@@ -43,9 +43,11 @@ that TriFlow is uniform or statistically strong.
   or any security-sensitive purpose.
 
 The current tests cover fixed output vectors, repeatability, edge seeds,
-reseeding, both call interfaces, copied state, and a broad one-byte histogram
-smoke check. Dedicated bias, runs, correlation, and established test-suite
-work remain future work. See the [test guide](../tests/README.md).
+reseeding, both call interfaces and copied state. They also cover example
+bounded sampling, broad output-byte and bit-balance smoke checks, and adjacent
+low-bit transitions. These are small deterministic checks, not statistical
+certification. Multi-seed bias, runs, deeper correlation and established
+test-suite work remain future work. See the [test guide](../tests/README.md).
 
 The existing sequence is frozen as **`triflow-v1`**. Its exact constants,
 integer wrapping, period limits and shared fixtures are specified in the

@@ -51,8 +51,9 @@ unrun platforms are not certified by these instructions.
 
 1. Records HEAD, working-tree status, source file hashes, interpreter and
    compiler identity, platform and command output in `report.json`.
-2. Builds/runs the unchanged generator regression and example-helper edge
-   suites, and builds/runs the fixed-seed demo.
+2. Builds/runs the unchanged generator regression, example-helper edge and
+   six-way sampling suites, the fixed-seed statistical smoke suite, and the
+   fixed-seed demo. This includes the existing checks integrated from main.
 3. Builds `tests/triflow_stream.cpp`, a text adapter over the existing engine.
 4. Runs six Python reference tests, including deliberately changed vectors,
    changed source, malformed fixtures and incomplete/incorrect stream data,

@@ -138,6 +138,8 @@ def main():
         suffix = ".exe" if os.name == "nt" else ""
         for name, source in (("triflow_rng_test", "tests/triflow_rng_test.cpp"),
                              ("example_utils_edge_test", "tests/example_utils_edge_test.cpp"),
+                             ("example_utils_test", "tests/example_utils_test.cpp"),
+                             ("triflow_statistics_test", "tests/triflow_statistics_test.cpp"),
                              ("triflow_stream", "tests/triflow_stream.cpp"),
                              ("triflow_demo", "examples/triflow_demo.cpp")):
             exe = output / (name + suffix)

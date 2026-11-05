@@ -10,8 +10,8 @@ Now we're experimenting with our own random / pseudo-random number generator fro
 | `src/` | the RNG itself |
 | `tests/` | randomness and determinism tests |
 | `docs/` | design notes and specs |
-| `examples/` | pokie machine, dice, key demos |
-| `benchmarks/` | speed and quality comparisons |
+| `examples/` | dice and toy pokie-reel demos |
+| `benchmarks/` | speed comparisons |
 | `journal/` | session logs |
 
 See [AGENTS.md](AGENTS.md) for how the AI helper behaves.
@@ -30,16 +30,21 @@ g++ -std=c++11 -Wall -Wextra -Wpedantic examples/triflow_demo.cpp -o triflow_dem
 ./triflow_demo
 ```
 
-Run the repeatability and basic histogram smoke checks:
+Run the reproducibility, bounded-sampling, and statistical smoke checks:
 
 ```sh
 g++ -std=c++11 -Wall -Wextra -Wpedantic tests/triflow_rng_test.cpp -o triflow_rng_test
 ./triflow_rng_test
+g++ -std=c++11 -Wall -Wextra -Wpedantic tests/example_utils_test.cpp -o example_utils_test
+./example_utils_test
+g++ -std=c++11 -Wall -Wextra -Wpedantic tests/triflow_statistics_test.cpp -o triflow_statistics_test
+./triflow_statistics_test
 ```
 
 This is an experimental PRNG, not true randomness or a cryptographic generator.
 Do not use it for Bitcoin keys, live gambling, passwords, or other
-security-sensitive uses. See the [design notes](docs/triflow-design.md).
+security-sensitive uses. The tests are fixed-seed smoke checks, not a
+statistical certification. See the [design notes](docs/triflow-design.md).
 
 ## Reproduce the frozen baseline
 
@@ -86,9 +91,10 @@ and current compatibility limits. The local npm metadata remains private.
 - [x] First working version in `src/`
 - [x] Regression tests: stable streams, edge seeds, reseeding, callable API, and copied state
 - [x] Bounded-sampling edge tests: rejection thresholds, large bounds, and invalid-input state preservation
-- [ ] Tests: full distribution, bias, runs, and correlation (a basic histogram smoke check added)
-- [ ] Examples: dice and pokie reels
-- [ ] Benchmarks against known generators
+- [x] Initial checks: fixed-seed replay, broad output/bit/transition smoke checks, and bounded-sampling checks
+- [ ] Fuller statistical testing: multi-seed bias, runs, correlation, and independent review
+- [x] Examples: reproducible dice and toy pokie reels
+- [x] Speed benchmark against `std::mt19937_64` (not a quality comparison)
 - [ ] Choose a licence / release for free
 - [ ] Security review before any bitcoin-style use
 

@@ -16,12 +16,26 @@ division-and-remainder average. The reference also matched all eight original
 fixed-seed outputs. These vectors pin the current algorithm; they do not prove
 that its output is statistically strong.
 
-Build it from the repository root with a C++11 compiler:
+`example_utils_test.cpp` checks that the examples' rejection-based bounded
+sampler stays in range, replays, rejects zero bounds and passes a broad
+fixed-seed six-way histogram. `triflow_statistics_test.cpp` checks broad
+fixed-seed byte-frequency, bit-balance and adjacent low-bit transition bounds.
+
+Build and run the core and smoke checks from the repository root with a
+C++11 compiler (the additional edge suite is described below):
 
 ```sh
 g++ -std=c++11 -Wall -Wextra -Wpedantic tests/triflow_rng_test.cpp -o triflow_rng_test
 ./triflow_rng_test
+g++ -std=c++11 -Wall -Wextra -Wpedantic tests/example_utils_test.cpp -o example_utils_test
+./example_utils_test
+g++ -std=c++11 -Wall -Wextra -Wpedantic tests/triflow_statistics_test.cpp -o triflow_statistics_test
+./triflow_statistics_test
 ```
+
+These are deterministic smoke checks, not statistical certification or evidence
+of cryptographic security. Multi-seed bias, runs, and deeper correlation
+testing still need independent study.
 
 On Windows with GCC available, use PowerShell:
 
@@ -70,7 +84,7 @@ the underlying PRNG.
 Run `.\scripts\verify.cmd` from the repository root on Windows, or
 `python3 -I -B scripts/verify.py --cxx g++` with GCC. See the
 [development guide](../docs/development.md) for tool discovery and reports.
-These commands include both existing C++ suites above without modifying them.
+These commands include all four C++ suites described above without modifying them.
 
 `fixtures/triflow-v1.json` retains the 28 expected words already present in
 `triflow_rng_test.cpp`. `reference/triflow_v1.py` checks all of them using
