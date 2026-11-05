@@ -28,6 +28,11 @@ that TriFlow is uniform or statistically strong.
 
 - The same 64-bit seed produces the same sequence on implementations with
   standard 64-bit unsigned integers.
+- Calling `seed()` again resets all lanes and the call counter, restarting the
+  sequence. Calling `operator()` is equivalent to calling `next()`.
+- Copying a generator saves its current stream position. Advancing one instance
+  does not change the other, but their matching streams are not independent
+  sources of randomness.
 - The internal lane state cycles after 2^64 calls; a long period alone does
   not establish good output quality.
 - A seed does not add entropy. TriFlow does not read a clock or operating
@@ -37,6 +42,12 @@ that TriFlow is uniform or statistically strong.
 - Do not use this prototype for Bitcoin/private keys, passwords, live gambling,
   or any security-sensitive purpose.
 
-The current tests cover repeatability and a broad one-byte histogram smoke
-check only. Dedicated bias, runs, correlation, and established test-suite
-work remain future work.
+The current tests cover fixed output vectors, repeatability, edge seeds,
+reseeding, both call interfaces, copied state, and a broad one-byte histogram
+smoke check. Dedicated bias, runs, correlation, and established test-suite
+work remain future work. See the [test guide](../tests/README.md).
+
+The existing sequence is frozen as **`triflow-v1`**. Its exact constants,
+integer wrapping, period limits and shared fixtures are specified in the
+[versioned contract](triflow-v1.md). The independent Python reference and
+repeatable build commands are described in [development](development.md).

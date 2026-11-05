@@ -1,0 +1,27 @@
+{
+  "name": "@clankv7/rng",
+  "version": "0.1.0-experimental.1",
+  "private": true,
+  "description": "Experimental TriFlow v1 PRNG: milestone 2 raw TypeScript engine",
+  "license": "UNLICENSED",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test:types": "tsc -p tsconfig.tests.json",
+    "test": "npm run build && npm run test:types && node --test tests/typescript/engine.test.mjs",
+    "verify": "node scripts/verify.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.6",
+    "typescript": "7.0.2"
+  }
+}

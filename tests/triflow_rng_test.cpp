@@ -16,6 +16,76 @@ void require(bool condition, const char* message) {
     }
 }
 
+void check_seed_edges_and_reseeding() {
+    struct SeedCase {
+        std::uint64_t seed;
+        std::uint64_t expected[4];
+    };
+    const SeedCase cases[] = {
+        {0x0000000000000000ULL, {
+            0x085A291D48FA42C1ULL, 0xEB9E879704FB09B6ULL,
+            0xCB2674C925F90FB8ULL, 0xDEB71520E8CBD7C8ULL}},
+        {0x0000000000000001ULL, {
+            0x280CF43651378B4FULL, 0x555C3C8EABAD12F4ULL,
+            0x2994BCFAE3636E0DULL, 0x1BBA778ECB4F93F2ULL}},
+        {0x8000000000000000ULL, {
+            0x9654838B2FE77925ULL, 0x2442103D32B02BEFULL,
+            0x8B6B7E6557276B26ULL, 0x383A1E38377A18E9ULL}},
+        {0xFFFFFFFFFFFFFFFFULL, {
+            0x39CBF5FE4C32268FULL, 0xBECA11C359E6A587ULL,
+            0xD987BFAA00086CF2ULL, 0xC9D97E63E615BEDDULL}},
+        {0x434C414E4B5F4131ULL, {
+            0xB38997EFA81A86C1ULL, 0xDCE047DC5C6DBE92ULL,
+            0x1D854C4A68939814ULL, 0xB1567D7CE63EF494ULL}}
+    };
+    clank::TriFlowRng reused(42);
+    for (unsigned int i = 0; i < 137; ++i) {
+        reused.next();
+    }
+
+    for (const SeedCase& test : cases) {
+        clank::TriFlowRng fresh(test.seed);
+        clank::TriFlowRng callable(test.seed);
+        reused.seed(test.seed);
+        for (unsigned int i = 0; i < 1024; ++i) {
+            const std::uint64_t value = fresh.next();
+            if (i < 4) {
+                require(value == test.expected[i],
+                        "edge-seed output vector must stay stable");
+            }
+            require(reused.next() == value,
+                    "reseeding must reset every lane and the call counter");
+            const std::uint64_t called = i % 2 == 0 ? callable() : callable.next();
+            require(called == value,
+                    "operator() and next() must advance the same stream");
+        }
+
+        reused.seed(test.seed);
+        for (std::uint64_t expected : test.expected) {
+            require(reused.next() == expected,
+                    "reseeding with the current seed must restart the stream");
+        }
+    }
+}
+
+void check_copied_state() {
+    clank::TriFlowRng original(0x0123456789ABCDEFULL);
+    for (unsigned int i = 0; i < 137; ++i) {
+        original.next();
+    }
+    clank::TriFlowRng copied(original);
+    clank::TriFlowRng assigned(0);
+    assigned = original;
+
+    for (unsigned int i = 0; i < 1024; ++i) {
+        const std::uint64_t value = original.next();
+        require(copied.next() == value,
+                "a copied generator must independently continue its saved state");
+        require(assigned.next() == value,
+                "copy assignment must replace all generator state");
+    }
+}
+
 }  // namespace
 
 int main() {
@@ -48,10 +118,8 @@ int main() {
     }
     require(different_seed_diverges, "different seeds should produce different streams");
 
-    clank::TriFlowRng zero_seed(0);
-    clank::TriFlowRng zero_seed_replay(0);
-    require(zero_seed.next() == zero_seed_replay.next(),
-            "zero is a valid, repeatable seed");
+    check_seed_edges_and_reseeding();
+    check_copied_state();
 
     const std::size_t sample_count = 262144;
     std::array<std::uint32_t, 256> buckets = {{0}};
