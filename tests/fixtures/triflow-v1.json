@@ -1,0 +1,33 @@
+{
+  "engine": "triflow-v1",
+  "source_sha256_lf": "5b275845ed1cea60f14095d10eff428096c15a8513ecd166900abec12f85ad3f",
+  "cases": [
+    {
+      "seed_hex": "0123456789abcdef",
+      "outputs_hex": [
+        "0ef50f516af9ed39", "873896253787d290", "de01cc510bdc225c", "fc9dd86b363ff4d6",
+        "8cc30e48e9d9dbca", "9535f178c0b812d6", "36f0f0a8c323d53b", "ca346ecdae6496b5"
+      ]
+    },
+    {
+      "seed_hex": "0000000000000000",
+      "outputs_hex": ["085a291d48fa42c1", "eb9e879704fb09b6", "cb2674c925f90fb8", "deb71520e8cbd7c8"]
+    },
+    {
+      "seed_hex": "0000000000000001",
+      "outputs_hex": ["280cf43651378b4f", "555c3c8eabad12f4", "2994bcfae3636e0d", "1bba778ecb4f93f2"]
+    },
+    {
+      "seed_hex": "8000000000000000",
+      "outputs_hex": ["9654838b2fe77925", "2442103d32b02bef", "8b6b7e6557276b26", "383a1e38377a18e9"]
+    },
+    {
+      "seed_hex": "ffffffffffffffff",
+      "outputs_hex": ["39cbf5fe4c32268f", "beca11c359e6a587", "d987bfaa00086cf2", "c9d97e63e615bedd"]
+    },
+    {
+      "seed_hex": "434c414e4b5f4131",
+      "outputs_hex": ["b38997efa81a86c1", "dce047dc5c6dbe92", "1d854c4a68939814", "b1567d7ce63ef494"]
+    }
+  ]
+}
