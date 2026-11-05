@@ -37,6 +37,8 @@ that TriFlow is uniform or statistically strong.
 - Do not use this prototype for Bitcoin/private keys, passwords, live gambling,
   or any security-sensitive purpose.
 
-The current tests cover repeatability and a broad one-byte histogram smoke
-check only. Dedicated bias, runs, correlation, and established test-suite
-work remain future work.
+The current tests cover fixed-seed repeatability, broad output-byte and
+bit-balance smoke checks, adjacent low-bit transitions, and example bounded
+sampling. They are small deterministic checks, not a statistical
+certification. Multi-seed bias, runs, deeper correlation, and established
+test-suite work remain future work.
