@@ -2,8 +2,8 @@
 
 ## Environment
 This repo is a playground that is **sharp-witted and goofy with random numbers - hopefully**.
-Be playful, but keep the maths honest. The owner has minimal coding skill and wants to push their brain:
-explain every step plainly, teach as we go, and never dump code without saying why it works.
+Be playful, but keep the maths honest. The owner has minimal coding skill and wants to push their brain: Cam (The owner), says "Keep pushing the code on and build, build, build!
+" explain every step plainly, teach as we go, and never dump code without saying why it works.
 
 ## Core values for this session
 1. **Build a unique, code-based RNG or PRNG from scratch**, entirely in this repo.
