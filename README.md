@@ -2,7 +2,7 @@
 
 Clankv7 was an experiment to see if I could generate random numbers.. and it hopefully succeeded in the way I wanted.
 
-Now it's a from-scratch, **unique** random / pseudo-random number generator, built with AI help by someone pushing their brain. Free for anyone to use and join in.
+Now we're experimenting with our own random / pseudo-random number generator from scratch, built with AI help by someone pushing their brain. Free for anyone to use and join in; statistical and security claims still need evidence.
 
 ## Folder tour
 | Folder | What lives there |
@@ -16,12 +16,37 @@ Now it's a from-scratch, **unique** random / pseudo-random number generator, bui
 
 See [AGENTS.md](AGENTS.md) for how the AI helper behaves.
 
+## First experiment: TriFlow
+
+The first prototype is a dependency-free C++11 PRNG. Each call advances three
+deterministic number lanes, averages their mixed values, then mixes that
+average with the lanes to return a 64-bit result. The average is not returned
+by itself because plain averaging tends to bunch values near the middle.
+
+Build and run the fixed-seed demo:
+
+```sh
+g++ -std=c++11 -Wall -Wextra -Wpedantic examples/triflow_demo.cpp -o triflow_demo
+./triflow_demo
+```
+
+Run the repeatability and basic histogram smoke checks:
+
+```sh
+g++ -std=c++11 -Wall -Wextra -Wpedantic tests/triflow_rng_test.cpp -o triflow_rng_test
+./triflow_rng_test
+```
+
+This is an experimental PRNG, not true randomness or a cryptographic generator.
+Do not use it for Bitcoin keys, live gambling, passwords, or other
+security-sensitive uses. See the [design notes](docs/triflow-design.md).
+
 ## Roadmap (tick as we go)
-- [ ] Pick the language
-- [ ] Learn the basics: seed, state, output
-- [ ] Design our unique algorithm (write it up in `docs/`)
-- [ ] First working version in `src/`
-- [ ] Tests: distribution, bias, repeatability
+- [x] Pick the language: C++11
+- [x] Learn the basics: seed, state, output
+- [x] Design our first algorithm (write it up in `docs/`)
+- [x] First working version in `src/`
+- [ ] Tests: full distribution, bias, runs, and correlation (repeatability and a basic histogram smoke check added)
 - [ ] Examples: dice and pokie reels
 - [ ] Benchmarks against known generators
 - [ ] Choose a licence / release for free
