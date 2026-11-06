@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="A local, deterministic TriFlow PRNG playground. Explore experimental seed transformations and compare their output with the original stream.">
+  <title>Seed Lab / TriFlow</title>
+  <link rel="stylesheet" href="seed_visualizer.css">
+  <script src="seed_lab.js" defer></script>
+  <script src="seed_visualizer.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to the seed lab</a>
+  <div class="page-shell">
+    <header class="page-header">
+      <div>
+        <p class="eyebrow brand"><span class="brand-mark" aria-hidden="true">∴</span> CLANKv7 <span class="brand-divider">/</span> TRIFLOW</p>
+        <h1>Seed <span>Lab.</span></h1>
+        <p class="intro">Flip a switch. Follow the ripple.</p>
+        <p class="intro-detail">One exact seed, a few experimental equations, and 4,096 deterministic outputs.</p>
+      </div>
+      <div class="header-notes">
+        <span class="local-badge"><span aria-hidden="true"></span> Local &amp; dependency-free</span>
+        <a class="text-link" href="#seed-pipeline">Follow the seed <span aria-hidden="true">↘</span></a>
+      </div>
+    </header>
+
+    <main id="main-content" tabindex="-1">
+      <noscript><p class="error-banner">JavaScript is required to draw the streams. Open this file in a modern browser with JavaScript enabled; no server or internet connection is needed.</p></noscript>
+      <p id="load-error" class="error-banner" role="alert" hidden></p>
+      <div class="lab-layout">
+        <section class="panel controls-panel" aria-labelledby="controls-title">
+          <div class="section-heading">
+            <p class="eyebrow">01 / THE STARTING POINT</p>
+            <h2 id="controls-title">Make it your seed.</h2>
+          </div>
+          <div class="control-layout">
+            <form id="seed-form" novalidate>
+              <label class="field-label" for="seed-input">Unsigned 64-bit seed</label>
+              <input id="seed-input" name="seed" type="text" value="0x0123456789abcdef" spellcheck="false" autocapitalize="off" autocomplete="off" aria-describedby="seed-help seed-error seed-draft-note" disabled>
+              <button id="apply-seed" class="button button-secondary apply-button" type="submit" disabled>Apply seed <span aria-hidden="true">↗</span></button>
+              <p id="seed-help" class="help-text">Decimal or <code>0x</code> hex, from 0 to 18,446,744,073,709,551,615. Your text stays exactly as entered: no rounding through a JavaScript Number.</p>
+              <p id="seed-error" class="field-error" role="alert" hidden></p>
+              <p id="seed-draft-note" class="draft-note" hidden>Unapplied seed text. Plots still show the last applied seed.</p>
+            </form>
+            <fieldset id="equation-controls" disabled>
+              <legend>Experimental seed equations</legend>
+              <p class="help-text experiment-intro">Applied in order, before the generator starts. These switches change the seed, not the C++ core.</p>
+              <div id="experiment-toggles" class="experiment-list"><p class="help-text">Loading seed equations…</p></div>
+            </fieldset>
+          </div>
+          <div class="repro-note">
+            <span class="note-symbol" aria-hidden="true">=</span>
+            <p><strong>Same seed + same toggles = same sequence.</strong> All switches start off, preserving the original stream.</p>
+          </div>
+          <p id="collision-warning" class="collision-note"><strong>Opt-in, not extra entropy.</strong> These transformations can merge different seeds into the same effective seed. More changed bits is not proof of quality.</p>
+        </section>
+
+        <section class="workspace" aria-labelledby="stream-title">
+          <div class="stream-heading">
+            <div>
+              <p class="eyebrow">02 / WATCH IT BUILD</p>
+              <h2 id="stream-title">A stream, two perspectives.</h2>
+            </div>
+            <span id="comparison-label" class="comparison-badge">All experiments off</span>
+          </div>
+          <p class="applied-seed-label">Applied seed <code id="applied-seed">0x0123456789abcdef</code></p>
+          <ul class="legend" aria-label="Plot colors">
+            <li><span class="legend-swatch selected-swatch" aria-hidden="true"></span>Selected settings</li>
+            <li><span class="legend-swatch baseline-swatch" aria-hidden="true"></span>Original · all off</li>
+          </ul>
+          <p id="comparison-note" class="help-text comparison-note">With all switches off, both streams match exactly.</p>
+
+          <section class="panel playback-panel" aria-label="Reveal controls">
+            <div class="playback-top">
+              <div class="playback-buttons">
+                <button id="play-pause" class="button button-primary" type="button" aria-pressed="false" aria-describedby="playback-help" disabled><span id="play-icon" aria-hidden="true">▶</span><span id="play-label">Play</span></button>
+                <button id="step" class="button button-secondary" type="button" aria-describedby="playback-help" disabled>Step <span class="button-detail">+128</span></button>
+                <button id="replay" class="button button-quiet" type="button" aria-describedby="playback-help" disabled><span aria-hidden="true">↺</span> Replay</button>
+              </div>
+              <p class="sample-counter"><strong id="samples-shown">0</strong><span> / 4,096</span><span class="counter-label">outputs shown</span></p>
+            </div>
+            <progress id="sample-progress" max="4096" value="0" aria-label="Outputs revealed">0 of 4096</progress>
+            <div class="playback-bottom">
+              <p id="playback-status">Preparing the first 256 samples…</p>
+              <p id="motion-note" hidden>Reduced motion: use Step for discrete updates.</p>
+            </div>
+            <p id="playback-help" class="help-text">Play reveals the fixed batch. Step adds 128 outputs. Replay and valid setting changes return to 256 outputs, paused.</p>
+          </section>
+
+          <section class="metrics-section" aria-labelledby="metrics-title">
+            <h3 id="metrics-title" class="subheading">Selected stream <span>· shown outputs only</span></h3>
+            <dl class="metrics-grid">
+              <div class="metric"><dt>Mean of x</dt><dd id="metric-mean">—</dd><dd class="metric-detail">0.5 is a reference, not a grade</dd></div>
+              <div class="metric"><dt>1-bit share</dt><dd id="metric-ones">—</dd><dd class="metric-detail">Across all 64 output bits</dd></div>
+              <div class="metric"><dt>Adjacent Pearson r</dt><dd id="metric-correlation">—</dd><dd class="metric-detail">All consecutive pairs of x</dd></div>
+              <div class="metric"><dt>Repeated outputs</dt><dd id="metric-repeats">—</dd><dd class="metric-detail">Duplicate values, not state cycles</dd></div>
+            </dl>
+          </section>
+
+          <div class="charts-grid">
+            <figure class="panel chart-panel histogram-panel" aria-labelledby="histogram-title">
+              <div class="chart-heading"><div><p class="eyebrow">DISTRIBUTION</p><h3 id="histogram-title">Where do the numbers land?</h3></div><span class="chart-tag">32 buckets</span></div>
+              <div class="canvas-frame histogram-frame"><canvas id="histogram" role="img" aria-labelledby="histogram-title" aria-describedby="histogram-description histogram-summary">Grouped histogram: amber bars show the original stream and mint bars show selected settings in 32 equal-width high-bit buckets.</canvas></div>
+              <figcaption id="histogram-description">Each output becomes <code>x = high32 / 2³²</code>, in [0, 1). Amber is the left bar; mint is the right. The dotted line marks an even split, not a pass/fail threshold.</figcaption>
+              <p id="histogram-summary" class="sr-only"></p>
+            </figure>
+
+            <figure class="panel chart-panel scatter-panel" aria-labelledby="scatter-title">
+              <div class="chart-heading"><div><p class="eyebrow">NEIGHBORS</p><h3 id="scatter-title">One output meets the next.</h3></div></div>
+              <p id="pair-count" class="chart-meta">0 pairs per stream</p>
+              <div class="canvas-frame scatter-frame"><canvas id="scatter" role="img" aria-labelledby="scatter-title" aria-describedby="scatter-description scatter-summary">Adjacent-pair scatter plot. The horizontal axis is x[n] and the vertical axis is x[n+1], each from zero to one. Amber rings show original pairs, mint dots show selected pairs.</canvas></div>
+              <figcaption id="scatter-description">Pairs (1, 2), (3, 4), and so on, for both streams. Amber rings + mint dots overlap when streams match. Unlike this nonoverlapping plot, Pearson r above uses every adjacent pair.</figcaption>
+              <p id="scatter-summary" class="sr-only"></p>
+            </figure>
+
+            <figure class="panel chart-panel raster-panel" aria-labelledby="raster-title">
+              <div class="chart-heading"><div><p class="eyebrow">BIT BY BIT</p><h3 id="raster-title">The binary close-up.</h3></div></div>
+              <p id="raster-range" class="chart-meta">Last 64 outputs</p>
+              <div class="bit-axis" aria-label="Bit columns run from most significant bit 63 at the left to least significant bit 0 at the right"><span>MSB · bit 63</span><span>bit 0 · LSB</span></div>
+              <p class="raster-stream-label"><span class="legend-swatch baseline-swatch" aria-hidden="true"></span>Original</p>
+              <div class="canvas-frame raster-frame"><canvas id="baseline-raster" role="img" aria-label="Original stream 64-bit raster, most significant bit on the left" aria-describedby="raster-description raster-summary">One row per original output, most significant bit on the left. Amber pixels are one; dark pixels are zero.</canvas></div>
+              <p class="raster-stream-label"><span class="legend-swatch selected-swatch" aria-hidden="true"></span>Selected</p>
+              <div class="canvas-frame raster-frame"><canvas id="selected-raster" role="img" aria-label="Selected stream 64-bit raster, most significant bit on the left" aria-describedby="raster-description raster-summary">One row per selected output, most significant bit on the left. Mint pixels are one; dark pixels are zero.</canvas></div>
+              <figcaption id="raster-description">Last 64 outputs. Bright = 1; dark = 0. Read each row left to right, bit 63 → bit 0; older rows are at the top, newest at the bottom.</figcaption>
+              <p id="raster-summary" class="sr-only"></p>
+            </figure>
+          </div>
+
+          <div class="latest-output panel"><div><span class="eyebrow">LATEST SELECTED OUTPUT</span><span id="latest-index" class="help-text">—</span></div><code id="latest-output">—</code><span class="output-unit">unsigned 64-bit · hex</span></div>
+        </section>
+      </div>
+
+      <section id="seed-pipeline" class="pipeline-section" aria-labelledby="pipeline-title">
+        <div class="pipeline-heading"><div><p class="eyebrow">03 / UNDER THE SWITCHES</p><h2 id="pipeline-title">Follow the seed, not a hunch.</h2></div><p>These equations run once on the seed. TriFlow then generates the sequence from the effective seed.</p></div>
+        <ol id="pipeline-stages" class="pipeline-list"><li class="panel pipeline-card"><h3>Original seed</h3><code>0x0123456789abcdef</code><p class="help-text">The transformation pipeline appears when the seed engine is ready.</p></li></ol>
+        <div class="explanation-grid">
+          <div><h3>64 bits, no extra luggage.</h3><p>Arithmetic wraps modulo <code>2⁶⁴</code>: keep the lowest 64 bits, discarding overflow. Decimal and hex are just two ways to write the same integer.</p></div>
+          <div><h3>Rearrange. Compare. Repeat.</h3><p>A rotation moves bits around and wraps them at the ends. XOR sets a bit to 1 where its two inputs differ. The pipeline counts changed bits between each stage’s input and output.</p></div>
+          <div><h3>More change ≠ better randomness.</h3><p>These experiments add no entropy and can merge seeds. Cross-feed alone maps both <code>0</code> and <code>2⁶⁴ − 1</code> to <code>0</code>; Rotate fold and Cross-feed each leave zero unchanged. More changed bits, a busy plot, or near-zero correlation proves neither quality nor security.</p></div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="page-footer"><p><strong>Deterministic by design. Experimental by nature.</strong> This is a PRNG, not true randomness. The C++ core is unchanged.</p><p>Visual exploration is not certification. Not for cryptographic keys, passwords, or live gambling.</p></footer>
+  </div>
+  <p id="announcer" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
+</body>
+</html>

@@ -24,6 +24,15 @@ values tends to cluster around the middle and is not, by itself, a good
 uniform-random output method. The extra mixing is an experiment, not proof
 that TriFlow is uniform or statistically strong.
 
+## Optional seed experiments
+
+The [visual seed lab](seed-experiments.md) applies toggleable integer equations
+before the normal lane initialization. It does not modify TriFlow's recurrence
+or its default seed behavior. The all-off path reproduces existing output
+vectors; enabled paths are replayable using the seed and toggle settings.
+Some experimental mappings have known seed collisions, so they must not be
+mistaken for new entropy or automatic quality improvements.
+
 ## Reproducibility and limits
 
 - The same 64-bit seed produces the same sequence on implementations with

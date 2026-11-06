@@ -37,6 +37,8 @@ g++ -std=c++11 -Wall -Wextra -Wpedantic tests/triflow_rng_test.cpp -o triflow_rn
 ./triflow_rng_test
 g++ -std=c++11 -Wall -Wextra -Wpedantic tests/example_utils_test.cpp -o example_utils_test
 ./example_utils_test
+g++ -std=c++11 -Wall -Wextra -Wpedantic tests/example_utils_edge_test.cpp -o example_utils_edge_test
+./example_utils_edge_test
 g++ -std=c++11 -Wall -Wextra -Wpedantic tests/triflow_statistics_test.cpp -o triflow_statistics_test
 ./triflow_statistics_test
 ```
@@ -46,14 +48,34 @@ Do not use it for Bitcoin keys, live gambling, passwords, or other
 security-sensitive uses. The tests are fixed-seed smoke checks, not a
 statistical certification. See the [design notes](docs/triflow-design.md).
 
+## Visual seed experiments
+
+Open [Seed Lab](examples/seed_visualizer.html) in a modern browser. No server,
+installation, or internet connection is needed. Toggle **Quadratic bend**,
+**Rotate fold**, and **Cross-feed** to follow a seed through experimental
+integer equations, then compare histograms, adjacent-output scatter, and bit
+rasters against the original stream. Play, pause, step, and replay a fixed batch.
+
+```powershell
+Invoke-Item .\examples\seed_visualizer.html
+```
+
+All toggles start off, preserving the original generator. The equations are
+also available through an optional C++11 header. They do **not** add entropy;
+Cross-feed even merges some distinct seeds. See the
+[walkthrough and equations](docs/seed-experiments.md) before interpreting the
+pictures as evidence of randomness.
+
 ## Roadmap (tick as we go)
 - [x] Pick the language: C++11
 - [x] Learn the basics: seed, state, output
 - [x] Design our first algorithm (write it up in `docs/`)
 - [x] First working version in `src/`
 - [x] Initial checks: fixed-seed replay, broad output/bit/transition smoke checks, and bounded-sampling checks
+- [x] Edge regressions: seed vectors, reseeding/copying, rejection thresholds, and exact draw consumption
 - [ ] Fuller statistical testing: multi-seed bias, runs, correlation, and independent review
 - [x] Examples: reproducible dice and toy pokie reels
+- [x] Visual seed lab: toggleable integer equations, replayable plots, and C++/browser parity checks
 - [x] Speed benchmark against `std::mt19937_64` (not a quality comparison)
 - [ ] Choose a licence / release for free
 - [ ] Security review before any bitcoin-style use
