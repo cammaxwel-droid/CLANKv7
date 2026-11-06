@@ -37,6 +37,11 @@ mistaken for new entropy or automatic quality improvements.
 
 - The same 64-bit seed produces the same sequence on implementations with
   standard 64-bit unsigned integers.
+- Calling `seed()` again resets all lanes and the call counter, restarting the
+  sequence. Calling `operator()` is equivalent to calling `next()`.
+- Copying a generator saves its current stream position. Advancing one instance
+  does not change the other, but their matching streams are not independent
+  sources of randomness.
 - The internal lane state cycles after 2^64 calls; a long period alone does
   not establish good output quality.
 - A seed does not add entropy. TriFlow does not read a clock or operating
@@ -46,8 +51,14 @@ mistaken for new entropy or automatic quality improvements.
 - Do not use this prototype for Bitcoin/private keys, passwords, live gambling,
   or any security-sensitive purpose.
 
-The current tests cover fixed-seed repeatability, broad output-byte and
-bit-balance smoke checks, adjacent low-bit transitions, and example bounded
-sampling. They are small deterministic checks, not a statistical
-certification. Multi-seed bias, runs, deeper correlation, and established
-test-suite work remain future work.
+The current tests cover fixed output vectors, repeatability, edge seeds,
+reseeding, both call interfaces and copied state. They also cover example
+bounded sampling, broad output-byte and bit-balance smoke checks, and adjacent
+low-bit transitions. These are small deterministic checks, not statistical
+certification. Multi-seed bias, runs, deeper correlation and established
+test-suite work remain future work. See the [test guide](../tests/README.md).
+
+The existing sequence is frozen as **`triflow-v1`**. Its exact constants,
+integer wrapping, period limits and shared fixtures are specified in the
+[versioned contract](triflow-v1.md). The independent Python reference and
+repeatable build commands are described in [development](development.md).

@@ -1,0 +1,7 @@
+# Local preservation copies and generated verification evidence.
+/.local/
+/build/
+/dist/
+/node_modules/
+__pycache__/
+*.pyc

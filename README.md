@@ -66,11 +66,51 @@ Cross-feed even merges some distinct seeds. See the
 [walkthrough and equations](docs/seed-experiments.md) before interpreting the
 pictures as evidence of randomness.
 
+## Reproduce the frozen baseline
+
+The current sequence is now named **`triflow-v1`**. The C++ engine and its
+existing expected outputs are preserved. An independent Python reference
+checks the arithmetic and compares 60,000 outputs with the C++ engine.
+
+On Windows, run the complete milestone 1 check from this folder:
+
+```powershell
+.\scripts\verify.cmd
+```
+
+It reuses installed development tools and saves an evidence report in a new
+`build/milestone-1/` folder. See [development instructions](docs/development.md),
+the [frozen engine contract](docs/triflow-v1.md), and the
+[approved RNG-kit roadmap](docs/rng-kit-roadmap.md). The planned TypeScript kit
+targets play-money browser/Electron games with no cash or redeemable prizes;
+later milestones remain separate work.
+
+## TypeScript raw engine
+
+Milestone 2 adds the exact `bigint` port for the future play-money game kit.
+It currently provides `createRng(seedHex)` and `nextUint64()`, with declarations
+and no runtime dependencies. Helpers and save/replay support come later.
+
+```powershell
+npm.cmd ci --ignore-scripts --no-audit --no-fund
+npm.cmd run verify
+```
+
+The complete check compares C++, Python and TypeScript across 87 seeds and
+870,000 raw words per engine, keeping all original expected outputs. See the
+[TypeScript engine guide](docs/typescript-engine.md) for the API, exact checks
+and current compatibility limits. The local npm metadata remains private.
+
 ## Roadmap (tick as we go)
+- [x] RNG kit milestone 1: freeze `triflow-v1`, preserve vectors, independent Python reference, repeatable build/check commands and tested failure diagnostics
+- [x] RNG kit milestone 2: exact TypeScript engine, strict declarations and C++/Python/TypeScript conformance
+- [ ] RNG kit milestones 3-8: helpers, replay, reference game, research, local package, release preparation
 - [x] Pick the language: C++11
 - [x] Learn the basics: seed, state, output
 - [x] Design our first algorithm (write it up in `docs/`)
 - [x] First working version in `src/`
+- [x] Regression tests: stable streams, edge seeds, reseeding, callable API, and copied state
+- [x] Bounded-sampling edge tests: rejection thresholds, large bounds, and invalid-input state preservation
 - [x] Initial checks: fixed-seed replay, broad output/bit/transition smoke checks, and bounded-sampling checks
 - [x] Edge regressions: seed vectors, reseeding/copying, rejection thresholds, and exact draw consumption
 - [ ] Fuller statistical testing: multi-seed bias, runs, correlation, and independent review
