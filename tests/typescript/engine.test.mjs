@@ -100,15 +100,18 @@ test("bounded integers validate first, stay in range, and skip deterministic dra
     const replay = createRng("0123456789abcdef");
     assert.equal(rng.intBelow(1n), 0n);
     assert.equal(rng.intBetween(-9n, -8n), -9n);
+    assert.equal(rng.pickWeighted(["only"], [3n]), "only");
+    assert.deepEqual(rng.shuffle(["only"]), ["only"]);
+    assert.equal(rng.nextUint64(), replay.nextUint64());
+    for (const bound of [0n, -1n, (1n << 32n) + 1n]) {
+        assert.throws(() => rng.intBelow(bound), RangeError);
+    }
+    assert.throws(() => rng.intBelow(6), TypeError);
     assert.equal(rng.nextUint64(), replay.nextUint64());
     for (const [min, max] of [[-10n, 0n], [0n, 1n << 32n]]) {
         const value = rng.intBetween(min, max);
         assert.ok(value >= min && value < max);
     }
-    for (const bound of [0n, -1n, (1n << 32n) + 1n]) {
-        assert.throws(() => rng.intBelow(bound), RangeError);
-    }
-    assert.throws(() => rng.intBelow(6), TypeError);
 });
 
 test("float, probability, weighted choice, and shuffle obey their contracts", () => {
@@ -127,6 +130,7 @@ test("float, probability, weighted choice, and shuffle obey their contracts", ()
     assert.throws(() => rng.chance(2n, 1n), RangeError);
     assert.throws(() => rng.pickWeighted(["a"], [0n]), RangeError);
     assert.throws(() => rng.pickWeighted(["a", "b"], [1n]), RangeError);
+    assert.throws(() => rng.pickWeighted(["a"], [1]), TypeError);
     const original = [1, 2, 3, 4, 5];
     const shuffled = rng.shuffle(original);
     assert.deepEqual([...shuffled].sort(), original);
