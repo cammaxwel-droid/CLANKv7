@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-import { createRng, ENGINE_ID } from "@clankv7/rng";
+import { createRng, ENGINE_ID, SAMPLING_ID } from "@clankv7/rng";
 import { averageThree, rotateLeft, uint64 } from "../../dist/arithmetic.js";
 
 const load = (name) => JSON.parse(readFileSync(new URL(`../fixtures/${name}`, import.meta.url), "utf8"));
@@ -12,6 +12,7 @@ const maximum = (1n << 64n) - 1n;
 
 test("all 28 pre-existing golden words stay exact", () => {
     assert.equal(ENGINE_ID, "triflow-v1");
+    assert.equal(SAMPLING_ID, "clank-sampling-v1");
     assert.equal(golden.engine, ENGINE_ID);
     let words = 0;
     for (const item of golden.cases) {

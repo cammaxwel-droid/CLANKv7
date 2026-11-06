@@ -1,8 +1,9 @@
 # TypeScript raw engine: milestone 2
 
 The TypeScript port reproduces the frozen `triflow-v1` C++ stream. The public
-entry point currently exports `createRng`, `ENGINE_ID`, and the `RawRng` type.
-It deliberately implements only the raw-engine milestone of the approved kit.
+entry point exports `createRng`, `ENGINE_ID`, `SAMPLING_ID`, and the `RawRng`
+type. The helper identifier is `clank-sampling-v1`; its separate identity keeps
+future sampling-contract changes distinguishable from the unchanged raw stream.
 
 After `npm.cmd run build`, this example works from a module in this repository:
 
@@ -96,16 +97,37 @@ unsigned results, seed validation, instance isolation, immutable API,
 64-bit wrapping/rotation and averages near maximum values. Compile-time
 checks exercise the public declarations and reject numeric seeds and outputs.
 
+## Sampling helpers: milestone 3
+
+Each RNG instance also provides:
+
+- `intBelow(bound)`: unbiased `bigint` in `[0, bound)` for bounds `1..2^32`,
+  using rejection sampling. A bound of one returns zero without drawing.
+- `intBetween(minInclusive, maxExclusive)`: unbiased `bigint` in the requested
+  nonempty interval, at most `2^32` wide.
+- `float53()`: a number in `[0, 1)` formed from the top 53 bits of one raw word.
+- `chance(numerator, denominator)`: exact integer probability; zero and certain
+  outcomes are shortcuts that consume no words.
+- `pickWeighted(items, weights)`: select according to nonnegative `bigint`
+  weights with a positive total no larger than `2^32`. A sole positive weight
+  consumes no words.
+- `shuffle(items)`: returns a Fisher-Yates shuffled copy, leaving its input
+  unchanged; arrays of length zero or one consume no words.
+
+Inputs are validated before deterministic shortcuts. Full-width quantities
+remain `bigint`; the float is intentionally limited to the exact 53-bit
+precision available in a JavaScript `number`. Rejection sampling has no retry
+cutoff. These helpers make sampling behaviour reproducible, not unpredictable.
+
 ## Current limits
 
 Observed acceptance is Windows AMD64 with Node **26.13.0**, Python **3.13.13**,
 MSVC **19.51.36260.0**, and the pinned TypeScript compiler. Browser and Electron
 acceptance remain later work; an ES2020 build alone does not establish them.
 
-This raw prototype still wraps its counter like C++. Snapshots, direct
+This prototype still wraps its counter like C++. Snapshots, direct
 large-position restoration and the `2^64` exhaustion marker arrive in milestone
-4. The planned `clank-sampling-v1` helpers arrive in milestone 3; no helper
-version is claimed by this raw-only API. Host entropy, game persistence,
+4. Host entropy, game persistence,
 local archive acceptance, benchmarks and statistical suites are also pending.
 
 Package metadata is provisional: `@clankv7/rng@0.1.0-experimental.1`, private.

@@ -104,7 +104,8 @@ and current compatibility limits. The local npm metadata remains private.
 ## Roadmap (tick as we go)
 - [x] RNG kit milestone 1: freeze `triflow-v1`, preserve vectors, independent Python reference, repeatable build/check commands and tested failure diagnostics
 - [x] RNG kit milestone 2: exact TypeScript engine, strict declarations and C++/Python/TypeScript conformance
-- [ ] RNG kit milestones 3-8: helpers, replay, reference game, research, local package, release preparation
+- [x] RNG kit milestone 3: deterministic sampling helpers, input checks, and draw-consumption tests
+- [ ] RNG kit milestones 4-8: replay, reference game, research, local package, release preparation
 - [x] Pick the language: C++11
 - [x] Learn the basics: seed, state, output
 - [x] Design our first algorithm (write it up in `docs/`)

@@ -1,6 +1,7 @@
 import { averageThree, mix64, rotateLeft, uint64 } from "./arithmetic.js";
 
 export const ENGINE_ID = "triflow-v1" as const;
+export const SAMPLING_ID = "clank-sampling-v1" as const;
 
 export interface RawRng {
     readonly engineId: typeof ENGINE_ID;

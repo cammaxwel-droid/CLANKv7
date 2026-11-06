@@ -1,16 +1,17 @@
-import { createRng, ENGINE_ID, type RawRng } from "@clankv7/rng";
+import { createRng, ENGINE_ID, SAMPLING_ID, type RawRng } from "@clankv7/rng";
 
 const rng: RawRng = createRng("0123456789abcdef");
 const word: bigint = rng.nextUint64();
 const engine: "triflow-v1" = rng.engineId;
 const constant: "triflow-v1" = ENGINE_ID;
+const sampling: "clank-sampling-v1" = SAMPLING_ID;
 const bounded: bigint = rng.intBelow(6n);
 const interval: bigint = rng.intBetween(-2n, 5n);
 const fraction: number = rng.float53();
 const event: boolean = rng.chance(1n, 6n);
 const chosen: string = rng.pickWeighted(["a", "b"], [2n, 1n]);
 const shuffled: readonly string[] = rng.shuffle(["a", "b"]);
-void [word, engine, constant, bounded, interval, fraction, event, chosen, shuffled];
+void [word, engine, constant, sampling, bounded, interval, fraction, event, chosen, shuffled];
 
 // Full seeds and outputs must never be JavaScript numbers.
 // @ts-expect-error Seed requires hexadecimal text.
