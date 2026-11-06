@@ -84,11 +84,53 @@ test("instances and detached draw functions retain their own stream positions", 
 
 test("public identity and methods cannot be replaced", () => {
     const rng = createRng("0000000000000000");
-    assert.deepEqual(Object.keys(rng).sort(), ["engineId", "nextUint64"]);
+    assert.deepEqual(Object.keys(rng).sort(), [
+        "chance", "engineId", "float53", "intBelow", "intBetween", "nextUint64",
+        "pickWeighted", "shuffle"
+    ]);
     assert.equal(rng.engineId, "triflow-v1");
     assert.ok(Object.isFrozen(rng));
     assert.throws(() => { rng.engineId = "changed"; }, TypeError);
     assert.throws(() => { rng.nextUint64 = () => 0n; }, TypeError);
+});
+
+test("bounded integers validate first, stay in range, and skip deterministic draws", () => {
+    const rng = createRng("0123456789abcdef");
+    const replay = createRng("0123456789abcdef");
+    assert.equal(rng.intBelow(1n), 0n);
+    assert.equal(rng.intBetween(-9n, -8n), -9n);
+    assert.equal(rng.nextUint64(), replay.nextUint64());
+    for (const [min, max] of [[-10n, 0n], [0n, 1n << 32n]]) {
+        const value = rng.intBetween(min, max);
+        assert.ok(value >= min && value < max);
+    }
+    for (const bound of [0n, -1n, (1n << 32n) + 1n]) {
+        assert.throws(() => rng.intBelow(bound), RangeError);
+    }
+    assert.throws(() => rng.intBelow(6), TypeError);
+});
+
+test("float, probability, weighted choice, and shuffle obey their contracts", () => {
+    const rng = createRng("fedcba9876543210");
+    const float = rng.float53();
+    assert.ok(float >= 0 && float < 1);
+    assert.equal(rng.chance(0n, 7n), false);
+    assert.equal(rng.chance(9n, 9n), true);
+
+    const noDraw = createRng("0123456789abcdef");
+    const replay = createRng("0123456789abcdef");
+    assert.equal(noDraw.chance(0n, 10n), false);
+    assert.equal(noDraw.pickWeighted(["only"], [3n]), "only");
+    assert.equal(noDraw.nextUint64(), replay.nextUint64());
+
+    assert.throws(() => rng.chance(2n, 1n), RangeError);
+    assert.throws(() => rng.pickWeighted(["a"], [0n]), RangeError);
+    assert.throws(() => rng.pickWeighted(["a", "b"], [1n]), RangeError);
+    const original = [1, 2, 3, 4, 5];
+    const shuffled = rng.shuffle(original);
+    assert.deepEqual([...shuffled].sort(), original);
+    assert.deepEqual(original, [1, 2, 3, 4, 5]);
+    assert.deepEqual(rng.shuffle([]), []);
 });
 
 test("unsigned wrapping and rotations preserve bits at the 64-bit boundaries", () => {
