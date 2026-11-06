@@ -1,41 +1,105 @@
-`triflow_rng_test.cpp` checks:
+[`triflow_rng_test.cpp`](triflow_rng_test.cpp) checks:
 
-- The original fixed output vector and 10,000-output same-seed replay.
-- Fixed output vectors for zero, one, the highest seed bit, all seed bits set,
-  and a seed that initializes the first lane to zero.
-- Reseeding a used generator, including restarting its current seed: both the
-  lanes and the call counter must return to their initial state.
-- Mixing `operator()` and `next()` calls without skipping or repeating output.
-- Copy construction and assignment after advancing the stream. Each copy must
-  continue from the saved position without changing the other instance.
+- The original fixed output vector, 10,000-output same-seed replay, and five
+  edge-seed vectors for zero, one, the highest seed bit, all bits set, and a seed
+  that initializes the first lane to zero.
+- Reseeding, including restarting the current seed; mixed `operator()`/`next()`
+  calls; and copy/assignment continuation without changing the other instance.
 - Different-seed divergence and a broad high-byte histogram smoke bound.
 
 The edge-seed vectors were calculated with a separate Python integer reference
 using `(a + b + c) // 3`, whose integers do not overflow, rather than the core's
-division-and-remainder average. The reference also matched all eight original
-fixed-seed outputs. These vectors pin the current algorithm; they do not prove
-that its output is statistically strong.
+division-and-remainder average. These vectors pin the current algorithm; they do
+not prove that its output is statistically strong.
 
-`example_utils_test.cpp` checks that the examples' rejection-based bounded
-sampler stays in range, replays, rejects zero bounds and passes a broad
-fixed-seed six-way histogram. `triflow_statistics_test.cpp` checks broad
-fixed-seed byte-frequency, bit-balance and adjacent low-bit transition bounds.
+[`example_utils_test.cpp`](example_utils_test.cpp) checks that the examples'
+rejection-based bounded-sampling helper stays in range, replays, rejects zero,
+and passes a broad fixed-seed six-way histogram. The
+[`example_utils_edge_test.cpp`](example_utils_edge_test.cpp) suite checks
+threshold equality and adjacent values, maximum and power-of-two bounds, exact
+draw consumption through rejections, and zero-bound exceptions that preserve
+generator state. These catch mechanics errors, not statistical weaknesses.
+[`triflow_statistics_test.cpp`](triflow_statistics_test.cpp) checks broad
+fixed-seed byte-frequency, bit-balance, and adjacent low-bit transition bounds.
 
-Build and run the core and smoke checks from the repository root with a
-C++11 compiler (the additional edge suite is described below):
+Build and run the core and smoke checks from the repository root with a C++11
+compiler:
 
 ```sh
 g++ -std=c++11 -Wall -Wextra -Wpedantic tests/triflow_rng_test.cpp -o triflow_rng_test
 ./triflow_rng_test
 g++ -std=c++11 -Wall -Wextra -Wpedantic tests/example_utils_test.cpp -o example_utils_test
 ./example_utils_test
+g++ -std=c++11 -Wall -Wextra -Wpedantic tests/example_utils_edge_test.cpp -o example_utils_edge_test
+./example_utils_edge_test
 g++ -std=c++11 -Wall -Wextra -Wpedantic tests/triflow_statistics_test.cpp -o triflow_statistics_test
 ./triflow_statistics_test
 ```
 
+## Seed-equation and browser-model checks
+
+[`seed_experiments_test.cpp`](seed_experiments_test.cpp) covers 24 fixed seed
+vectors, all eight toggle combinations, stage order, disabled-stage compatibility,
+576 replay profiles, and the documented Cross-feed collision. Its `--vectors`
+mode emits seeds, settings, effective seeds, and 64 outputs per profile.
+
+[`seed_lab_test.cjs`](seed_lab_test.cjs) uses Node's built-in test runner (no npm
+packages). It checks exact seed parsing, the original output vector, all equation
+combinations, plot statistics, replay, and 48 fixed seed/settings statistical
+smoke checks. When `CLANK_VECTOR_EXE` points at the compiled C++ test, it also
+compares 36,864 outputs directly with C++. Without it, that one parity test is
+explicitly skipped; the other tests still run.
+
+With GCC and Node, from the repository root:
+
+```sh
+g++ -std=c++11 -Wall -Wextra -Wpedantic tests/seed_experiments_test.cpp -o seed_experiments_test
+./seed_experiments_test
+CLANK_VECTOR_EXE=./seed_experiments_test node --test tests/seed_lab_test.cjs
+```
+
+On Windows, in a Visual Studio Developer PowerShell with Node installed:
+
+```powershell
+cl /nologo /EHsc /W4 /std:c++14 tests\seed_experiments_test.cpp /Fe:seed_experiments_test.exe
+if ($LASTEXITCODE -ne 0) { throw 'Build failed' }
+.\seed_experiments_test.exe
+$env:CLANK_VECTOR_EXE = (Resolve-Path .\seed_experiments_test.exe).Path
+node --test .\tests\seed_lab_test.cjs
+```
+
+MSVC's earliest selectable mode is C++14; the header itself uses C++11 features.
+The optional browser script does not add any requirement to the C++ core.
+
+### Visualizer controller and manual checks
+
+[`seed_visualizer_test.cjs`](seed_visualizer_test.cjs) runs the actual controller
+with a small simulated DOM, canvas, and clock using Node's built-in modules.
+It checks state and control behavior without installing a browser package:
+
+```powershell
+node --test .\tests\seed_lab_test.cjs .\tests\seed_visualizer_test.cjs
+```
+
+These tests cannot validate real browser layout, canvas pixels, focus handling,
+or browser compatibility. Open [`seed_visualizer.html`](../examples/seed_visualizer.html)
+and check the following manually:
+
+- All toggles start off, and both streams agree. Turning an equation on updates
+  the seed stages and plots; turning it off restores the original sequence.
+- Zero and the maximum unsigned seed are accepted; a negative or too-large
+  seed shows an accessible error without replacing the last valid plots.
+- Play/pause, Step, and Replay are deterministic and stop at 4,096 samples.
+- Keyboard controls remain usable, and charts/text fit a narrow window.
+- With Cross-feed alone, seeds zero and `0xffffffffffffffff` produce the same
+  effective seed and plots, as the collision warning describes.
+
 These are deterministic smoke checks, not statistical certification or evidence
-of cryptographic security. Multi-seed bias, runs, and deeper correlation
-testing still need independent study.
+of cryptographic security. A passed test does not make the known seed collision
+disappear. Runs, deeper correlation studies, long-cycle checks, larger seed
+samples, and independent testing still need further work.
+Multi-seed bias, runs, and deeper correlation testing still need independent
+study.
 
 On Windows with GCC available, use PowerShell:
 

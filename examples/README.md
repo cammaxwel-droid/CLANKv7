@@ -20,6 +20,21 @@ g++ -std=c++11 -Wall -Wextra -Wpedantic examples/pokie_demo.cpp -o pokie_demo
 ./pokie_demo
 ```
 
+## Visual seed lab
+
+Open [`seed_visualizer.html`](seed_visualizer.html) directly in a modern browser
+(no server or dependencies). The local scripts use exact BigInt arithmetic to
+match C++ TriFlow. Toggle optional seed equations, inspect each stage, and
+compare the original and experimental outputs through plots and replay controls.
+All toggles start disabled. Same seed plus same toggles means the same stream.
+
+```powershell
+Invoke-Item .\examples\seed_visualizer.html
+```
+
+See the [walkthrough](../docs/seed-experiments.md) for the mathematics, the known
+Cross-feed seed collision, and what the pictures can and cannot tell us.
+
 These educational examples do not establish suitability for live gambling,
 key generation, or security-sensitive applications. See the
 [design notes](../docs/triflow-design.md).
