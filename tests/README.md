@@ -1,3 +1,10 @@
+The common verifier also compiles/runs `chain_seed_test.cpp` and compares its
+64 fixed records and 512 downstream outputs with independent Python arithmetic
+in `reference/chain_seed_v2.py`. Chain tests cover both directions of every
+enabled stage combination, generation/replay, the former seed collision, and
+explicit errors for attempts to invert original lossy Cross-feed. See the
+[candidate contract](../docs/chain-seed-v2.md) for scope and compatibility.
+
 [`triflow_rng_test.cpp`](triflow_rng_test.cpp) checks:
 
 - The original fixed output vector, 10,000-output same-seed replay, and five
