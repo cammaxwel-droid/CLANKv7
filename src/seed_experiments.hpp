@@ -41,6 +41,39 @@ inline std::uint64_t experimental_seed(
     return seed;
 }
 
+// The optional seed experiments are lossy in the generic case, so the repaired
+// stage explicitly inverts the current mode order and then ties a generation-
+// specific 64-bit tail to the exact loose end being repaired.
+inline std::uint64_t invert_seed_experiment(
+    std::uint64_t seed, const SeedExperiments& options = SeedExperiments()) noexcept {
+    if (options.cross_feed) {
+        seed = seed - seed_detail::rotate_left(seed, 23)
+                    * (seed_detail::rotate_left(seed, 47) | 1ULL);
+    }
+    if (options.rotate_fold) {
+        seed = seed ^ seed_detail::rotate_left(seed, 17)
+                    ^ seed_detail::rotate_left(seed, 41);
+    }
+    if (options.quadratic_bend) {
+        const std::uint64_t constant = 0x434C414E4B5F5131ULL;
+        std::uint64_t candidate = seed - constant;
+        candidate = candidate - 2ULL * candidate * candidate;
+        seed = candidate;
+    }
+    return seed;
+}
+
+inline std::uint64_t experimental_seed_repaired(
+    std::uint64_t seed,
+    std::uint64_t generation,
+    const SeedExperiments& options = SeedExperiments()) noexcept {
+    std::uint64_t repaired = experimental_seed(seed, options);
+    repaired = invert_seed_experiment(repaired, options);
+    repaired ^= (generation + 1ULL) * 0x9E3779B97F4A7C15ULL;
+    repaired ^= seed_detail::rotate_left(repaired, 13) ^ seed_detail::rotate_left(repaired, 37);
+    return repaired;
+}
+
 }  // namespace clank
 
 #endif
