@@ -140,6 +140,7 @@ def main():
                              ("example_utils_edge_test", "tests/example_utils_edge_test.cpp"),
                              ("example_utils_test", "tests/example_utils_test.cpp"),
                              ("triflow_statistics_test", "tests/triflow_statistics_test.cpp"),
+                             ("chain_seed_test", "tests/chain_seed_test.cpp"),
                              ("triflow_stream", "tests/triflow_stream.cpp"),
                              ("triflow_demo", "examples/triflow_demo.cpp")):
             exe = output / (name + suffix)
@@ -158,6 +159,8 @@ def main():
         run(python + [ROOT / "tests/reference/test_verify_driver.py"], env)
         stream = output / ("triflow_stream" + suffix)
         run(python + [ROOT / "tests/reference/triflow_v1.py", "--cpp", stream], env)
+        run(python + [ROOT / "tests/reference/chain_seed_v2.py", "--cpp",
+                      output / ("chain_seed_test" + suffix)], env)
         # Adapter input errors must fail before emitting any random words.
         for seed, count in (("0", "1"), ("gggggggggggggggg", "1"),
                             ("0000000000000000", "0"), ("0000000000000000", "-1"),

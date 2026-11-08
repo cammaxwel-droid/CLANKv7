@@ -102,6 +102,7 @@ The complete check compares C++, Python and TypeScript across 87 seeds and
 and current compatibility limits. The local npm metadata remains private.
 
 ## Roadmap (tick as we go)
+- [x] Chain 0.6.2-rc.1: reversible seed preprocessing, correct inverses and independent regression evidence. See the [candidate contract](docs/chain-seed-v2.md).
 - [x] RNG kit milestone 1: freeze `triflow-v1`, preserve vectors, independent Python reference, repeatable build/check commands and tested failure diagnostics
 - [x] RNG kit milestone 2: exact TypeScript engine, strict declarations and C++/Python/TypeScript conformance
 - [ ] RNG kit milestones 3-8: helpers, replay, reference game, research, local package, release preparation
