@@ -7,7 +7,7 @@ public publication requires a later decision about ownership and licensing.
 
 Provisional package: `@clankv7/rng`, candidate `0.1.0-experimental.1`.
 Keep it private during development and use zero third-party runtime packages.
-The raw engine identifier is `triflow-v1`; the planned helper identifier is
+The raw engine identifier is `triflow-v1`; the implemented helper identifier is
 `clank-sampling-v1`. The identifiers preserve replay as future versions evolve.
 
 ## Bounded milestones
@@ -23,7 +23,8 @@ The raw engine identifier is `triflow-v1`; the planned helper identifier is
 3. **Game helpers:** rejection-sampled bounds through `2^32`, intervals,
    53-bit floats, integer probabilities and weights, pick and Fisher-Yates
    shuffle. Invalid inputs and deterministic shortcuts consume no draws;
-   validate before shortcuts. Rejection has no arbitrary retry cutoff.
+   validate before shortcuts. Rejection has no arbitrary retry cutoff. Implemented
+   in this candidate with mutation, validation and draw-consumption regressions.
 4. **Sessions and replay:** host entropy entry points, canonical seed text,
    versioned snapshots, direct large-position restoration and exhaustion at
    `2^64` draws. Keep gameplay and cosmetics in separately seeded instances.
@@ -40,9 +41,11 @@ The raw engine identifier is `triflow-v1`; the planned helper identifier is
    compatibility statement, changelog and evidence. Publication remains a
    separately authorised action.
 
-Milestones 1 and 2 are implemented. Later milestones need their own bounded
-handoff and evidence; this document grants no automatic authority to implement
-them, commit, push or publish.
+Milestones 1–3 are implemented in the unified candidate. Local package smoke
+checks and diagnostic tools cover parts of later milestones, while sessions,
+durable game persistence, established statistical suites and public-release
+preparation remain open. The current candidate overview records its evidence.
+This roadmap alone grants no authority to publish packages or merge branches.
 
 ## Locked first example, for milestone 5
 

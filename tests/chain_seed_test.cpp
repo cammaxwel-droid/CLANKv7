@@ -79,7 +79,8 @@ void check_round_trips(std::uint64_t seed) {
 int main(int argc, char* argv[]) {
     if (argc == 2 && std::string(argv[1]) == "--vectors") {
         emit_vectors();
-        return 0;
+        std::cout.flush();
+        return std::cout ? 0 : 1;
     }
     require(argc == 1, "usage: chain_seed_test [--vectors]");
     for (unsigned int index = 0; index < 8; ++index) check_round_trips(seeds[index]);
@@ -117,8 +118,9 @@ int main(int argc, char* argv[]) {
             }
         }
     }
-    std::cout << "Chain v2 passed 10392-seed bidirectional round trips across all eight modes,\n"
+    std::cout << "Chain v2 passed 10392 seed-case bidirectional round trips across all eight modes,\n"
               << "legacy rejection, collision regressions and 65536 generation/replay checks.\n"
               << "These are correctness checks, not statistical or cryptographic certification.\n";
-    return 0;
+    std::cout.flush();
+    return std::cout ? 0 : 1;
 }

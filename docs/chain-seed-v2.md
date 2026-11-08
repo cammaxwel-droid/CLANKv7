@@ -37,7 +37,9 @@ contract or enabling original Cross-feed must account for this change.
 `src/triflow_rng.hpp`, the raw TypeScript engine, `experimental_seed` and their
 existing expected outputs retain their prior behavior. The browser Seed Lab
 continues to demonstrate the original experiment. It does not display Chain v2.
-The separately developed CLANK Bench branch is outside this candidate.
+The original Chain release candidate kept Bench on a separate branch. The
+unified candidate now includes Bench with a native-matching JavaScript Chain
+port, selectable preprocessing, generation and all eight stage masks.
 
 ## Exact operations
 

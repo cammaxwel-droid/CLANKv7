@@ -1,10 +1,15 @@
-import { createRng, ENGINE_ID, type RawRng } from "@clankv7/rng";
+import {
+    createRng, createSampler, ENGINE_ID, SAMPLING_ID, type RawRng, type Sampler
+} from "@clankv7/rng";
 
 const rng: RawRng = createRng("0123456789abcdef");
 const word: bigint = rng.nextUint64();
 const engine: "triflow-v1" = rng.engineId;
 const constant: "triflow-v1" = ENGINE_ID;
-void [word, engine, constant];
+const sampler: Sampler = createSampler(rng);
+const sampling: "clank-sampling-v1" = sampler.samplingId;
+const roll: number = sampler.intBelow(6);
+void [word, engine, constant, sampling, roll, SAMPLING_ID];
 
 // Full seeds and outputs must never be JavaScript numbers.
 // @ts-expect-error Seed requires hexadecimal text.
@@ -16,5 +21,7 @@ const rounded: number = rng.nextUint64();
 void rounded;
 // @ts-expect-error Engine identity is readonly.
 rng.engineId = "triflow-v1";
-// @ts-expect-error Helpers arrive in their own milestone.
+// @ts-expect-error Sampling helpers are a separately versioned wrapper.
 rng.intBelow(6);
+// @ts-expect-error Sampling bounds are numbers, not bigint words.
+sampler.intBelow(6n);

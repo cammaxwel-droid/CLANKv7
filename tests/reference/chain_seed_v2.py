@@ -98,8 +98,15 @@ def main():
     parser.add_argument("--cpp", type=Path)
     parser.add_argument("--write-fixture", action="store_true")
     args = parser.parse_args()
+    if args.write_fixture and args.cpp is None:
+        parser.error("--write-fixture requires --cpp so native agreement is checked before saving")
     lines = expected_lines()
     evidence = {"engine": "chain-seed-v2", "records": lines}
+    if args.cpp:
+        result = subprocess.run([str(args.cpp.resolve()), "--vectors"], check=True,
+                                capture_output=True, text=True, timeout=30)
+        if result.stdout.splitlines() != lines:
+            raise ValueError("Native Chain v2 output differs from independent Python arithmetic")
     if args.write_fixture:
         with FIXTURE.open("x", encoding="utf-8") as output:
             json.dump(evidence, output, indent=2)
@@ -109,10 +116,6 @@ def main():
         raise ValueError("Chain v2 frozen fixture does not match independent Python arithmetic")
     print("chain-seed-v2: 64 fixed records and 512 seeded TriFlow outputs match Python.")
     if args.cpp:
-        result = subprocess.run([str(args.cpp.resolve()), "--vectors"], check=True,
-                                capture_output=True, text=True, timeout=30)
-        if result.stdout.splitlines() != lines:
-            raise ValueError("Native Chain v2 output differs from independent Python arithmetic")
         print("C++/Python agree on every prepared seed, inverse, generation wrapper and output.")
     else:
         print("Native comparison omitted; pass --cpp with the compiled chain_seed_test.")

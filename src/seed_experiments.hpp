@@ -26,9 +26,12 @@ inline std::uint64_t rotate_left(std::uint64_t value,
 inline std::uint32_t cross_mix(std::uint32_t value,
                                std::uint32_t multiplier,
                                unsigned int distance) noexcept {
+    // Widen explicitly so uint32_t integer promotions cannot make multiplication
+    // signed on implementations whose int is wider than 32 bits.
+    const std::uint64_t wide = value;
     const std::uint32_t rotated =
-        (value << distance) | (value >> (32U - distance));
-    return value * multiplier + rotated;
+        static_cast<std::uint32_t>((wide << distance) | (wide >> (32U - distance)));
+    return static_cast<std::uint32_t>(wide * multiplier + rotated);
 }
 
 inline std::uint64_t cross_feed(std::uint64_t seed, bool inverse) noexcept {

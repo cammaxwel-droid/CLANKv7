@@ -1,126 +1,104 @@
-# Reproducing the milestone 1 baseline
+# Build and verification
 
-The checks use a C++ compiler and Python 3's standard library. Nothing is
-downloaded or installed by the scripts. Generated files go into a new
-`build/milestone-1/<UTC timestamp>-<process id>/` directory on every run.
-Existing run directories and source files are never overwritten.
+The native source uses C++11 and the portable kit targets ES2020. Development
+uses an installed C++ compiler, Python 3 and Node. The recorded unified-candidate
+run uses GCC 14.2.0, Python 3.12.14 and Node 24.22.1 on Linux x64. Historical
+Windows checks are recorded in the journals; this candidate still needs its
+own Windows acceptance run.
 
 ## Windows
 
-From the repository root, in PowerShell or Command Prompt:
+From the extracted source directory or checkout:
 
 ```powershell
 .\scripts\verify.cmd
 ```
 
-This avoids the blocked PowerShell npm shim and requires no execution-policy
-change. The wrapper first uses `CLANK_PYTHON` if set, then an installed Python
-3 launcher, then CPython bundled with an installed Blender. To choose that
-known interpreter explicitly in PowerShell:
+The wrapper discovers an existing Python launcher, `CLANK_PYTHON`, or Blender's
+bundled Python. The driver discovers installed Microsoft C++ Build Tools through
+`vswhere.exe` and prepares only its child process environment. GCC/Clang can be
+selected explicitly with `--cxx`. A specific Visual Studio installation can be
+chosen with `--vs-installation`.
+
+To choose Python explicitly:
 
 ```powershell
-$env:CLANK_PYTHON = 'C:\Program Files\Blender Foundation\Blender 5.2\5.2\python\bin\python.exe'
+$env:CLANK_PYTHON = 'C:\path\to\python.exe'
 .\scripts\verify.cmd
 ```
-
-The Python driver discovers Microsoft C++ Build Tools through its installed
-`vswhere.exe` and loads `vcvars64.bat` only into its child build environment.
-It does not edit the system PATH or open any application window. A specific
-installed MSVC toolchain can be selected with:
-
-```powershell
-.\scripts\verify.cmd --vs-installation 'C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools'
-```
-
-MSVC is invoked with `/std:c++14 /EHsc /W4 /WX /permissive- /O2`.
-MSVC's earliest explicit language switch is C++14; the unchanged source uses
-C++11 features. GCC/Clang builds request actual C++11 with warnings as errors.
 
 ## GCC or Clang
 
 ```sh
 python3 -I -B scripts/verify.py --cxx g++
-# Or: python3 -I -B scripts/verify.py --cxx clang++
 ```
 
-These commands are provided for repeatability. Current platform acceptance
-is limited to the Windows toolchains actually recorded in the journal;
-unrun platforms are not certified by these instructions.
+Native verification uses warnings as errors and optimization. GCC/Clang use
+`-std=c++11`; MSVC uses its earliest explicit language mode, `/std:c++14`, with
+`/W4 /WX /permissive- /O2`. These commands perform no tool installation or
+machine-wide configuration changes.
 
-## What verify does
-
-1. Records HEAD, working-tree status, source file hashes, interpreter and
-   compiler identity, platform and command output in `report.json`.
-2. Builds/runs the unchanged generator regression, example-helper edge and
-   six-way sampling suites, the fixed-seed statistical smoke suite, and the
-   fixed-seed demo. This includes the existing checks integrated from main.
-3. Builds `tests/triflow_stream.cpp`, a text adapter over the existing engine.
-4. Runs six Python reference tests, including deliberately changed vectors,
-   changed source, malformed fixtures and incomplete/incorrect stream data,
-   plus four driver tests covering timeout, launch-failure and nonzero-exit
-   evidence.
-5. Checks the frozen header hash and all 28 pre-existing golden outputs.
-6. Compares 10,000 consecutive words per seed for all six fixture seeds:
-   60,000 exact C++/Python comparisons, starting at draw 1.
-7. Checks adapter argument failures and that they emit no random words.
-
-A failed compile/check exits nonzero and keeps its evidence. Recorded commands
-that time out or fail to launch retain their arguments, elapsed time, error,
-and partial output in `report.json`; their `exit_code` is `null` rather than
-an invented process status. Timeouts also record `timeout_seconds`.
-The verifier never regenerates golden data. Run the reference alone with an
-existing Python interpreter if only the frozen source and saved vectors need checking:
-
-```sh
-python3 -I -B tests/reference/triflow_v1.py
-```
-
-Full verification also supplies `--cpp <built triflow_stream executable>`.
-The standalone reference states explicitly when C++ comparison was omitted.
-Its optional `--draws` is bounded at one million words per seed; the default
-is 10,000. This is deterministic checking, not the extended statistical suite.
-
-## Local tool provenance
-
-Milestone 1 reused pre-existing vendor-installed tools. Microsoft `cl.exe`
-19.51.36260.0 (toolset directory `14.51.36231`) and Blender's CPython 3.13.13
-were inspected with valid Microsoft Corporation and Blender Foundation
-Authenticode signatures, respectively. Their executable SHA-256 values were:
-
-```text
-cl.exe:     b0a1818ebae6da7f18230a84e76ce839212584ac4c2ab55b97a0d5268085da57
-python.exe: 7e1ee2b9d35128f9296443a576dc02686f913ac01b8672bd301fa464c90b5271
-```
-
-These identify the inspected executables, not every file in either toolchain.
-Each run records the interpreter/compiler it actually uses; launcher discovery
-may select a different installed Python. There were no downloaded archives to
-authenticate and no tool provisioning or machine configuration changes.
-Node 26.13.0 and `npm.cmd` 11.20.0 were also found, but are unnecessary for
-milestone 1. Future Windows npm instructions must use `npm.cmd`.
-
-The TypeScript package, npm aliases, browser/Electron acceptance, statistical
-adapters and reference game's maths checks belong to later milestones.
-Passing this baseline proves no claim about security or statistical quality.
-
-## Milestone 2: include the TypeScript engine
-
-The original `.\scripts\verify.cmd` command continues to run the C++/Python
-baseline. For the complete TypeScript build, declarations and three-way checks:
+## TypeScript and complete checks
 
 ```powershell
 npm.cmd ci --ignore-scripts --no-audit --no-fund
+npm.cmd test
 npm.cmd run verify
 ```
 
-Use `npm` instead of `npm.cmd` on non-Windows hosts. The npm entry point runs
-the same Python driver with `--typescript`; it selects the existing Windows
-wrapper or `CLANK_PYTHON`/`python3` on other hosts. Reports are kept in new
-`build/milestone-2/` directories and include compiled-output hashes.
-`conformance.json` records all seed-stream fingerprints and exact counts.
+Use `npm` outside Windows. The compiler and development type declarations are
+pinned by `package-lock.json`. The built package has no runtime dependencies.
+`npm test` builds JavaScript/declarations and runs TypeScript, backend and all
+browser-model tests. Its native/browser parity test skips explicitly if no
+native adapter is supplied. `npm run verify` builds that adapter and enables
+the native parity comparison, then performs complete three-language conformance.
 
-The pinned development tools, raw API, 87-seed corpus, 1,044 checkpoints,
-870,000-word comparisons and platform limits are described in the
-[TypeScript guide](typescript-engine.md). `npm.cmd test` provides the compiler,
-declaration and nine Node checks without invoking Python or C++.
-Verification performs no installation and never regenerates expected outputs.
+Additional driver arguments are forwarded without putting them in shell command
+text. For example:
+
+```sh
+npm run verify -- --cxx g++
+```
+
+The direct Python driver also accepts `--javascript` to require Node. Without
+that flag, a native-only machine can complete native verification; the report
+explicitly records that JavaScript was not run. When Node is installed, the
+browser-model tests run automatically even without the TypeScript flag.
+
+## What is checked
+
+- Original frozen header identity and all 28 original golden words.
+- Native RNG, bounded example helpers, Chain and original seed-experiment tests.
+- Compilation and execution of all four native demonstrations.
+- Independent Python reference and verifier failure-evidence tests.
+- 60,000 original native/Python word comparisons.
+- Chain v2 native/Python fixtures, inversion and generation/replay checks.
+- Browser models/controllers, including native parity on 36,864 words.
+- With `--typescript`, strict public declarations, sampling and actual loopback
+  backend tests, plus 870,000 words per engine across C++, Python and TypeScript.
+
+The browser tests model DOM, Canvas and clocks. They do not establish real
+browser layout, keyboard focus or native Windows behavior. HTTP backend tests
+make real local requests and require a host permitting loopback sockets.
+
+## Source archives and evidence
+
+A downloaded source ZIP works without `.git`. The verifier hashes source files
+and records that checkout metadata is unavailable. It never borrows the parent
+folder's Git identity. A real checkout also records its HEAD and working state.
+
+Every run creates a new `build/milestone-1/` or `build/milestone-2/` evidence
+directory. Reports retain exact source hashes, command arguments, elapsed times,
+exit statuses, stdout/stderr and every compiled binary's hash. Failures retain
+partial evidence. Timeouts and launch failures have a null exit status with the
+actual error. Golden fixtures are read-only during normal verification.
+
+Chain fixture creation requires explicit `--write-fixture --cpp <adapter>`,
+checks native/Python agreement first, and refuses to replace an existing file.
+A Python-only run cannot manufacture accepted native evidence.
+
+## Local package check
+
+Run `npm.cmd pack` to create a local archive. The prepack step rebuilds dist,
+so a clean checkout produces JavaScript and declarations. The package remains
+private and `UNLICENSED`. No public npm publication is part of verification.

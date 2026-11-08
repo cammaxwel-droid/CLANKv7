@@ -113,6 +113,22 @@
             const braid = a ^ rotate(b, 17n) ^ rotate(c, 39n);
             return mix(mean ^ braid ^ this.calls);
         }
+
+        // Inspect a real draw without adding work to the normal next() path.
+        nextTrace() {
+            const before = { a: this.a, b: this.b, c: this.c, calls: this.calls };
+            const output = this.next();
+            const after = { a: this.a, b: this.b, c: this.c, calls: this.calls };
+            const a = mix(this.a ^ rotate(this.c, 11n));
+            const b = mix(this.b ^ rotate(this.a, 27n));
+            const c = mix(this.c ^ rotate(this.b, 45n));
+            return {
+                before, after, mixed: { a, b, c },
+                mean: (a + b + c) / 3n,
+                braid: a ^ rotate(b, 17n) ^ rotate(c, 39n),
+                output
+            };
+        }
     }
 
     const scale = value => Number(value >> 32n) / 4294967296;
@@ -146,11 +162,11 @@
             histogram[Number(value >> 59n)]++;
             sum += x;
             seen.add(value);
-            // Eight-bit chunks keep per-frame plotting affordable without rounding the seed.
-            for (let offset = 0; offset < 64; offset += 8) {
-                const byte = Number((value >> BigInt(offset)) & 255n);
-                for (let bit = 0; bit < 8; ++bit) {
-                    const on = (byte >> bit) & 1;
+            // Each 32-bit half is exactly representable as a Number; keep full words as BigInt.
+            for (let offset = 0; offset < 64; offset += 32) {
+                const half = Number((value >> BigInt(offset)) & 0xffffffffn);
+                for (let bit = 0; bit < 32; ++bit) {
+                    const on = (half >>> bit) & 1;
                     bitCounts[offset + bit] += on;
                     ones += on;
                 }
