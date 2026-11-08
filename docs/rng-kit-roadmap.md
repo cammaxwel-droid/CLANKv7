@@ -40,9 +40,9 @@ The raw engine identifier is `triflow-v1`; the planned helper identifier is
    compatibility statement, changelog and evidence. Publication remains a
    separately authorised action.
 
-Milestones 1 and 2 are implemented. Later milestones need their own bounded
-handoff and evidence; this document grants no automatic authority to implement
-them, commit, push or publish.
+Milestones 1 through 3 are implemented. Later milestones need their own
+bounded handoff and evidence; this document grants no automatic authority to
+implement them, commit, push or publish.
 
 ## Locked first example, for milestone 5
 

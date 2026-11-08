@@ -65,11 +65,15 @@ the [frozen engine contract](docs/triflow-v1.md), and the
 targets play-money browser/Electron games with no cash or redeemable prizes;
 later milestones remain separate work.
 
-## TypeScript raw engine
+## TypeScript engine and sampling helpers
 
-Milestone 2 adds the exact `bigint` port for the future play-money game kit.
-It currently provides `createRng(seedHex)` and `nextUint64()`, with declarations
-and no runtime dependencies. Helpers and save/replay support come later.
+Milestones 2 and 3 provide the exact `bigint` engine plus separately versioned
+`clank-sampling-v1` game helpers for bounded integers, intervals, probabilities,
+weights, picking, shuffling and 53-bit floats. The dependency-free API keeps raw
+draws available through `createRng(seedHex)` and adds helpers with
+`createSampler(rng)`. Save/replay support comes later.
+See the [sampling helper guide](docs/sampling-v1.md) for accepted ranges and
+the exact draw-consumption rules.
 
 ```powershell
 npm.cmd ci --ignore-scripts --no-audit --no-fund
@@ -81,10 +85,19 @@ The complete check compares C++, Python and TypeScript across 87 seeds and
 [TypeScript engine guide](docs/typescript-engine.md) for the API, exact checks
 and current compatibility limits. The local npm metadata remains private.
 
+## Local RNG backend
+
+A development-only, loopback-bound HTTP API offers fixed-seed word generation,
+health status and known-vector diagnostics. It requires a separately generated
+secret token and does not run arbitrary scripts or rewrite code. See the
+[backend guide](docs/local-backend.md) for setup and security limits.
+
 ## Roadmap (tick as we go)
 - [x] RNG kit milestone 1: freeze `triflow-v1`, preserve vectors, independent Python reference, repeatable build/check commands and tested failure diagnostics
 - [x] RNG kit milestone 2: exact TypeScript engine, strict declarations and C++/Python/TypeScript conformance
-- [ ] RNG kit milestones 3-8: helpers, replay, reference game, research, local package, release preparation
+- [x] RNG kit milestone 3: versioned sampling helpers with validation and draw-consumption tests
+- [x] Local development backend: allowlisted RNG API, CLI diagnostics and request-boundary tests
+- [ ] RNG kit milestones 4-8: replay, reference game, research, local package, release preparation
 - [x] Pick the language: C++11
 - [x] Learn the basics: seed, state, output
 - [x] Design our first algorithm (write it up in `docs/`)
