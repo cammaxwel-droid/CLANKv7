@@ -38,3 +38,11 @@ Cross-feed seed collision, and what the pictures can and cannot tell us.
 These educational examples do not establish suitability for live gambling,
 key generation, or security-sensitive applications. See the
 [design notes](../docs/triflow-design.md).
+
+## CLANK Bench
+
+Open [`clank_bench.html`](clank_bench.html) locally, keeping its stylesheet,
+controller, model and `seed_lab.js` together. Inspect actual lane values and
+raw outputs, compare a one-bit seed change, trace rejection sampling into
+reel stops, simulate hypothetical spins and export a JSON report. The browser
+does all work locally in bounded batches. See [the guide](../docs/clank-bench.md).

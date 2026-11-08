@@ -113,6 +113,22 @@
             const braid = a ^ rotate(b, 17n) ^ rotate(c, 39n);
             return mix(mean ^ braid ^ this.calls);
         }
+
+        // Inspect a real draw without adding work to the normal next() path.
+        nextTrace() {
+            const before = { a: this.a, b: this.b, c: this.c, calls: this.calls };
+            const output = this.next();
+            const after = { a: this.a, b: this.b, c: this.c, calls: this.calls };
+            const a = mix(this.a ^ rotate(this.c, 11n));
+            const b = mix(this.b ^ rotate(this.a, 27n));
+            const c = mix(this.c ^ rotate(this.b, 45n));
+            return {
+                before, after, mixed: { a, b, c },
+                mean: (a + b + c) / 3n,
+                braid: a ^ rotate(b, 17n) ^ rotate(c, 39n),
+                output
+            };
+        }
     }
 
     const scale = value => Number(value >> 32n) / 4294967296;
