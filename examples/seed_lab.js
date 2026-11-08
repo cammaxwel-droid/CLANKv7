@@ -146,11 +146,11 @@
             histogram[Number(value >> 59n)]++;
             sum += x;
             seen.add(value);
-            // Eight-bit chunks keep per-frame plotting affordable without rounding the seed.
-            for (let offset = 0; offset < 64; offset += 8) {
-                const byte = Number((value >> BigInt(offset)) & 255n);
-                for (let bit = 0; bit < 8; ++bit) {
-                    const on = (byte >> bit) & 1;
+            // Each 32-bit half is exactly representable as a Number; keep full words as BigInt.
+            for (let offset = 0; offset < 64; offset += 32) {
+                const half = Number((value >> BigInt(offset)) & 0xffffffffn);
+                for (let bit = 0; bit < 32; ++bit) {
+                    const on = (half >>> bit) & 1;
                     bitCounts[offset + bit] += on;
                     ones += on;
                 }

@@ -79,6 +79,14 @@ test("plot measurements handle empty, constant, endpoint, and correlated samples
     for (const count of [-1, 65537, 1.5, Infinity]) assert.throws(() => lab.generate(0n, 0, count), RangeError);
 });
 
+test("statistics retain each bit across both unsigned 32-bit halves", () => {
+    for (let bit = 0; bit < 64; ++bit) {
+        const stats = lab.summarize([1n << BigInt(bit)]);
+        assert.deepEqual(stats.bitCounts, Array.from({ length: 64 }, (_, index) => Number(index === bit)));
+        assert.equal(stats.onesFraction, 1 / 64);
+    }
+});
+
 test("fixed multi-seed smoke checks across all toggles (not certification)", () => {
     for (const seed of [0n, 1n, SEED, MAX, 0xaaaaaaaaaaaaaaaan, 9007199254740993n]) {
         for (let mask = 0; mask < 8; ++mask) {

@@ -117,6 +117,7 @@ and current compatibility limits. The local npm metadata remains private.
 - [x] Examples: reproducible dice and toy pokie reels
 - [x] Visual seed lab: toggleable integer equations, replayable plots, and C++/browser parity checks
 - [x] Speed benchmark against `std::mt19937_64` (not a quality comparison)
+- [x] Faster Seed Lab bit statistics using exact 32-bit halves, with a repeatable Node benchmark
 - [ ] Choose a licence / release for free
 - [ ] Security review before any bitcoin-style use
 
