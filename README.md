@@ -66,6 +66,15 @@ Cross-feed even merges some distinct seeds. See the
 [walkthrough and equations](docs/seed-experiments.md) before interpreting the
 pictures as evidence of randomness.
 
+## CLANK Bench
+
+Open [CLANK Bench](examples/clank_bench.html) locally to inspect real TriFlow
+draws, lane values, output plots, seed-bit comparisons and raw-word-to-reel
+mapping. Simulate bounded batches and compare measured payouts with exact
+216-combination maths, then export a diagnostic JSON report. See the
+[Bench guide](docs/clank-bench.md) and the optional importable
+[main-freeze ruleset](docs/protect-main.md).
+
 ## Reproduce the frozen baseline
 
 The current sequence is now named **`triflow-v1`**. The C++ engine and its
@@ -117,6 +126,8 @@ and current compatibility limits. The local npm metadata remains private.
 - [x] Examples: reproducible dice and toy pokie reels
 - [x] Visual seed lab: toggleable integer equations, replayable plots, and C++/browser parity checks
 - [x] Speed benchmark against `std::mt19937_64` (not a quality comparison)
+- [x] Faster Seed Lab bit statistics using exact 32-bit halves, with a repeatable Node benchmark
+- [x] CLANK Bench with raw tracing, reel diagnostics, bounded simulation and report export
 - [ ] Choose a licence / release for free
 - [ ] Security review before any bitcoin-style use
 

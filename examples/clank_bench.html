@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Inspect TriFlow raw draws, reel mapping and simulated game mathematics in an offline CLANKv7 workbench.">
+  <title>CLANK Bench · TriFlow</title>
+  <link rel="stylesheet" href="clank_bench.css">
+  <script src="seed_lab.js" defer></script>
+  <script src="clank_bench_model.js" defer></script>
+  <script src="clank_bench.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#workspace">Skip to the workbench</a>
+  <div class="shell">
+    <header>
+      <div><p class="eyebrow">CLANKv7 / TRIFLOW-V1</p><h1>CLANK <span>Bench.</span></h1><p class="intro">Follow the number. Inspect the spin.</p></div>
+      <div class="header-links"><span class="badge">OFFLINE · EXACT 64-BIT MATH</span><a href="seed_visualizer.html">Open Seed Lab ↗</a></div>
+    </header>
+    <main id="workspace" tabindex="-1">
+      <noscript><p class="error">Enable JavaScript to use this local workbench.</p></noscript>
+      <p id="error" class="error" role="alert" hidden></p>
+      <section class="panel setup" aria-labelledby="setup-title">
+        <div><p class="eyebrow">01 / SET THE EXPERIMENT</p><h2 id="setup-title">One seed. Repeatable results.</h2><p class="muted">Original TriFlow, with seed transformations off. Applying a seed restarts both diagnostic streams.</p></div>
+        <form id="seed-form" novalidate>
+          <div><label for="seed">Unsigned 64-bit seed</label><input id="seed" value="0x0123456789abcdef" spellcheck="false" autocomplete="off" aria-describedby="seed-help draft"></div>
+          <div class="bit-control"><label for="flip-bit">Compare seed bit</label><input id="flip-bit" type="number" min="0" max="63" step="1" value="0" aria-describedby="flip-help"></div>
+          <button id="apply" type="submit">Apply seed</button>
+          <p id="seed-help" class="help">Decimal or 0x hex. Full seeds and outputs remain exact BigInts.</p>
+          <p id="flip-help" class="help">Compare with a second seed having this one bit flipped, from bit 0 to bit 63.</p>
+          <p id="draft" class="help amber" hidden>Settings edited. The panels still show the applied seed.</p>
+        </form>
+        <div class="applied"><span>APPLIED <code id="applied-seed">—</code></span><span>FLIPPED <code id="flipped-seed">—</code></span><button id="reset" class="quiet" type="button">Replay applied seed</button><button id="export" class="quiet" type="button">Export report ↓</button></div>
+      </section>
+
+      <section class="raw-section" aria-labelledby="raw-title">
+        <div class="section-heading"><div><p class="eyebrow">02 / INSIDE THE GENERATOR</p><h2 id="raw-title">Watch the bits move.</h2></div><span class="badge">RAW INSPECTOR STREAM</span></div>
+        <div class="toolbar panel"><div class="buttons"><button id="raw-play" type="button" aria-pressed="false">Play stream</button><button id="raw-next" class="secondary" type="button">Next draw</button><button id="raw-step" class="secondary" type="button">+128 draws</button></div><p id="raw-status">Paused</p><span class="muted">4,096 draw limit · 30 fps max</span></div>
+        <dl class="metrics">
+          <div><dt>Raw draws</dt><dd id="raw-count">—</dd><small>Latest draw shown below</small></div>
+          <div><dt>One-bit share</dt><dd id="ones">—</dd><small>Across every output bit</small></div>
+          <div><dt>Seed-flip difference</dt><dd id="avalanche">—</dd><small>Mean changed bits / 64</small></div>
+          <div><dt>Repeated words</dt><dd id="repeats">—</dd><small>Within this fixed batch</small></div>
+        </dl>
+        <div class="charts">
+          <figure class="panel"><p class="eyebrow">DISTRIBUTION / TOP 5 BITS</p><h3>32 places to land.</h3><div class="canvas-frame"><canvas id="histogram" role="img" aria-describedby="hist-summary">32-bin histogram of raw outputs.</canvas></div><figcaption id="hist-summary">—</figcaption></figure>
+          <figure class="panel"><p class="eyebrow">ADJACENT OUTPUTS / HIGH 32 BITS</p><h3>One meets the next.</h3><div class="canvas-frame"><canvas id="scatter" role="img" aria-describedby="scatter-summary">Consecutive outputs plotted against one another.</canvas></div><figcaption id="scatter-summary">—</figcaption></figure>
+          <figure class="panel"><p class="eyebrow">BINARY / NEWEST AT THE BOTTOM</p><h3>Every bit in view.</h3><div class="canvas-frame"><canvas id="raster" role="img" aria-describedby="raster-summary">Last 64 outputs as rows of 64 bits.</canvas></div><figcaption id="raster-summary">—</figcaption></figure>
+        </div>
+        <section class="panel trace" aria-labelledby="trace-title">
+          <div class="section-heading"><div><p class="eyebrow">LATEST RAW DRAW / EXACT HEX</p><h3 id="trace-title">Three lanes, one output.</h3></div><code id="raw-output" class="output">—</code></div>
+          <div class="table-scroll"><table><caption>Lane values around the latest real draw. All arithmetic wraps to 64 bits except the wide average.</caption><thead><tr><th scope="col">Lane</th><th scope="col">Before increment</th><th scope="col">After increment</th><th scope="col">After cross-lane mixing</th></tr></thead><tbody id="lane-rows"></tbody></table></div>
+          <dl class="trace-values"><div><dt>Wide average</dt><dd><code id="trace-mean">—</code></dd></div><div><dt>Rotated braid</dt><dd><code id="trace-braid">—</code></dd></div><div><dt>Draw counter</dt><dd><code id="trace-counter">—</code></dd></div></dl>
+          <p class="help">Output = mix(average XOR braid XOR counter). The average uses the complete sum before division by three. Trace values come from a real draw through the existing engine.</p>
+        </section>
+      </section>
+
+      <section class="reel-section" aria-labelledby="reel-title">
+        <div class="section-heading"><div><p class="eyebrow">03 / INTO THE REELS</p><h2 id="reel-title">From raw word to reel stop.</h2></div><span class="badge amber">REEL SIMULATION STREAM</span></div>
+        <p class="muted">This is a separately positioned copy of the same seeded stream. Raw inspection and animation do not consume reel draws. Spins use hypothetical one-credit stakes.</p>
+        <div class="toolbar panel"><div class="buttons"><button id="spin" type="button">Simulate one spin</button><button id="batch" class="secondary" type="button">Run 10,000 spins</button><button id="batch-stop" class="quiet" type="button" disabled>Pause simulation</button></div><p id="spin-status">Ready</p></div>
+        <div class="reel-cards" id="reel-cards" aria-label="Latest three reel results"></div>
+        <p id="round-summary" class="round-summary">Simulate a spin to inspect the mapping.</p>
+        <div class="table-scroll panel"><table><caption>Latest spin mapping. A draw is accepted when word ≥ threshold. Stop = accepted word modulo 6. Positions are numbered 0–5.</caption><thead><tr><th scope="col">Reel</th><th scope="col">Threshold</th><th scope="col">Rejected words</th><th scope="col">Accepted word</th><th scope="col">Stop → symbol</th></tr></thead><tbody id="mapping-rows"></tbody></table></div>
+        <p class="help">For six stops the rejection threshold is 4, so rejected draws are extremely rare in a small sample. The table lists up to eight rejected words per reel and counts any additional rejections.</p>
+
+        <div class="section-heading maths-heading"><div><p class="eyebrow">04 / ACROSS MANY SPINS</p><h2>Measure against the maths.</h2></div><span class="muted">100,000 spin limit per seed</span></div>
+        <dl class="metrics">
+          <div><dt>Simulated spins</dt><dd id="spins">0</dd><small id="reel-draws">0 raw words consumed</small></div>
+          <div><dt>Measured gross return</dt><dd id="return">—</dd><small>Theory 204 / 216 = 94.4444%</small></div>
+          <div><dt>Measured hit frequency</dt><dd id="hit-rate">—</dd><small>Theory 36 / 216 = 16.6667%</small></div>
+          <div><dt>Gross minus stakes</dt><dd id="net">—</dd><small>Hypothetical credits</small></div>
+        </dl>
+        <div class="maths-grid">
+          <div class="panel table-scroll"><table><caption>Exact enumeration of all 216 stop combinations versus this sample. Payouts include the one-credit stake.</caption><thead><tr><th scope="col">Outcome</th><th scope="col">Gross payout</th><th scope="col">Exact count / 216</th><th scope="col">Observed</th><th scope="col">Expected at n</th></tr></thead><tbody id="payout-rows"></tbody></table></div>
+          <div class="panel"><p class="eyebrow">SAMPLE UNCERTAINTY</p><h3>Fluctuation belongs here.</h3><p id="uncertainty">Run a sample to see the theoretical model's reference band.</p><p class="help">The band uses the exact payout variance and an approximate ±1.96 standard-error range for the sample mean, assuming independent uniform reel stops. Small samples can be highly skewed. This comparison provides no pass/fail certification.</p><details><summary>Reel strips and paytable</summary><div id="strips"></div><p>AAA pays 4. BBB pays 8. CCC pays 32. Every other result pays zero.</p></details></div>
+        </div>
+        <p class="help">Raw words, seeds and simulation reports stay in this tab until you export a report. Reloading starts a new diagnostic session. Reports record evidence for inspection and do not restore live game state.</p>
+      </section>
+    </main>
+    <footer><p><strong>Repeatability is inspectable.</strong> A noisy chart or a close return percentage does not prove unpredictability or fairness.</p><p>Experimental PRNG research · play-credit simulation · <a href="../docs/clank-bench.md">Read the guide</a></p></footer>
+  </div>
+</body>
+</html>

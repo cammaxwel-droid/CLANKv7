@@ -17,3 +17,14 @@ and system load; the benchmark does not assess output quality or security.
 One run in this development environment measured about 8.2 ns/output for
 TriFlow and 1.7 ns/output for `std::mt19937_64`; treat those as an example
 measurement, not a portable performance claim.
+
+## Seed Lab statistics
+
+Run `node benchmarks/seed_lab_benchmark.cjs` from the repository root. This
+dependency-free benchmark warms up the existing model, then reports seven
+five-run averages and their median for summarizing a fixed 65,536-word batch.
+It records Node, platform, CPU, seed and a result checksum. An optional module
+path measures a saved CommonJS copy of an earlier `seed_lab.js` with the same
+workload, for example `node benchmarks/seed_lab_benchmark.cjs build/optimization/seed_lab_before.cjs`.
+This measures statistics computation, excluding generation, canvas drawing and
+browser layout. Compare repeated runs on the same machine and runtime.
