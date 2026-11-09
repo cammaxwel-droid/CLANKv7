@@ -8,7 +8,7 @@ const path = require("node:path");
 const vm = require("node:vm");
 const examples = path.join(__dirname, "../examples");
 const html = readFileSync(path.join(examples, "clank_bench.html"), "utf8");
-const scripts = ["seed_lab.js", "clank_bench_model.js", "clank_bench.js"].map(name =>
+const scripts = ["seed_lab.js", "chain_seed.js", "clank_bench_model.js", "clank_bench.js"].map(name =>
     new vm.Script(readFileSync(path.join(examples, name), "utf8"), { filename: name }));
 
 class Element {
@@ -58,7 +58,7 @@ function boot() {
     document.createElement = tag => new Element(tag);
     document.createDocumentFragment = () => new Element("fragment");
     document.getElementById = id => ids.get(id);
-    document.querySelectorAll = () => [...ids.values()].filter(node => ["input", "button"].includes(node.tag));
+    document.querySelectorAll = () => [...ids.values()].filter(node => ["input", "button", "select"].includes(node.tag));
     for (const match of html.matchAll(/<([a-z][\w-]*)\b([^>]*\bid="([^"]+)"[^>]*)>/gi)) {
         const element = new Element(match[1]);
         for (const attribute of match[2].matchAll(/([\w-]+)(?:="([^"]*)")?/g)) {
@@ -121,7 +121,7 @@ function boot() {
 
 test("offline page boots paused with real trace data and finite canvas coordinates", () => {
     const references = [...html.matchAll(/<script[^>]+src="([^"]+)"/g)].map(match => match[1]);
-    assert.deepEqual(references, ["seed_lab.js", "clank_bench_model.js", "clank_bench.js"]);
+    assert.deepEqual(references, ["seed_lab.js", "chain_seed.js", "clank_bench_model.js", "clank_bench.js"]);
     assert.equal(/(?:src|href)="https?:/.test(html), false);
     const app = boot();
     assert.equal(app.count("raw-count"), 64);
@@ -219,4 +219,73 @@ test("report export serializes exact words and settings without consuming a draw
     assert.equal(app.get("raw-output").textContent, output);
     for (const callback of app.timers) callback();
     assert.deepEqual(app.revoked, ["blob:test"]);
+});
+
+test("Chain selection, canonical generation, draft preservation and exact report replay work through the page", async () => {
+    const app = boot();
+    assert.equal(app.get("generation").disabled, true);
+    app.get("mode").value = "chain-seed-v2";
+    app.get("mode").emit("change");
+    assert.equal(app.get("generation").disabled, false);
+    assert.equal(app.get("draft").hidden, false);
+    app.get("generation").value = "ffffffffffffffff";
+    app.get("chain-mask").value = "7";
+    app.submit("18446744073709551615", "63");
+    assert.match(app.get("preprocessing-summary").textContent, /Chain v2/);
+    app.click("spin");
+    const output = app.get("raw-output").textContent;
+    const mapping = app.get("mapping-rows").textContent;
+    app.get("generation").value = "FFFFFFFFFFFFFFFF";
+    app.get("generation").emit("input");
+    app.submit("0", "0");
+    assert.equal(app.get("generation").getAttribute("aria-invalid"), "true");
+    assert.equal(app.get("raw-output").textContent, output);
+    assert.equal(app.get("mapping-rows").textContent, mapping);
+    app.click("reset");
+    assert.equal(app.get("generation").value, "ffffffffffffffff");
+    assert.equal(app.get("seed").value, "18446744073709551615");
+    assert.equal(app.get("error").hidden, true);
+    assert.equal(app.get("raw-output").textContent, output);
+    app.click("spin");
+    assert.equal(app.get("mapping-rows").textContent, mapping);
+    app.click("export");
+    const report = JSON.parse(await app.blobs[0].text());
+    assert.equal(report.preprocessing.mode, "chain-seed-v2");
+    assert.equal(report.preprocessing.generation, "ffffffffffffffff");
+    assert.equal(report.preprocessing.mask, 7);
+    assert.equal(report.format, "clank-bench-report-v2");
+    assert.match(report.preprocessing.effectiveSeed, /^0x[0-9a-f]{16}$/);
+    app.get("mode").value = report.preprocessing.mode;
+    app.get("generation").value = report.preprocessing.generation;
+    app.get("chain-mask").value = String(report.preprocessing.mask);
+    app.submit(report.seed, String(report.flipBit));
+    assert.equal(app.get("error").hidden, true, "Exported settings paste directly into the controls");
+    assert.equal(app.count("spins"), 0);
+    assert.equal(app.get("raw-output").textContent, output);
+    app.click("spin");
+    assert.equal(app.get("mapping-rows").textContent, mapping);
+    app.get("generation").value = "invalid";
+    app.get("mode").value = "raw";
+    app.get("mode").emit("change");
+    app.submit("1");
+    assert.equal(app.get("error").hidden, true, "Disabled Chain fields cannot block original mode");
+    assert.equal(app.get("draft").hidden, true);
+    assert.match(app.get("preprocessing-summary").textContent, /Original TriFlow/);
+});
+
+test("hiding the page cancels a pending resize and both activity loops", () => {
+    const app = boot();
+    app.window.emit("resize");
+    app.click("raw-play");
+    app.click("batch");
+    assert.equal(app.pending.size, 2);
+    app.document.hidden = true;
+    app.document.emit("visibilitychange");
+    assert.equal(app.pending.size, 0);
+    app.document.hidden = false;
+    app.document.emit("visibilitychange");
+    app.window.emit("resize");
+    assert.equal(app.pending.size, 1);
+    app.tick();
+    assert.equal(app.pending.size, 0);
 });

@@ -1,4 +1,9 @@
 The examples use explicit fixed seeds so each program repeats its output.
+
+`chain_demo.cpp` demonstrates the corrected `chain-seed-v2` preprocessing and
+generation wrapper. Build it with the same C++11 flags used below. See the
+[candidate contract](../docs/chain-seed-v2.md) for its version and replay rules.
+
 `triflow_demo.cpp` prints eight raw outputs; `dice_demo.cpp` rolls eight
 six-sided dice; `pokie_demo.cpp` prints a few toy reel spins. The latter is a
 programming demo, not live gambling advice.
@@ -42,7 +47,7 @@ key generation, or security-sensitive applications. See the
 ## CLANK Bench
 
 Open [`clank_bench.html`](clank_bench.html) locally, keeping its stylesheet,
-controller, model and `seed_lab.js` together. Inspect actual lane values and
-raw outputs, compare a one-bit seed change, trace rejection sampling into
+controller, model, `seed_lab.js` and `chain_seed.js` together. Inspect actual lane values and
+raw outputs, select raw or Chain v2 preprocessing, compare a one-bit seed change, trace rejection sampling into
 reel stops, simulate hypothetical spins and export a JSON report. The browser
 does all work locally in bounded batches. See [the guide](../docs/clank-bench.md).

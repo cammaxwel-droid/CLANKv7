@@ -4,6 +4,7 @@ from contextlib import redirect_stderr, redirect_stdout
 import importlib.util
 import io
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -18,6 +19,11 @@ SPEC.loader.exec_module(driver)
 
 
 class DriverEvidenceChecks(unittest.TestCase):
+    def setUp(self):
+        forwarded = patch.dict(os.environ, {"CLANK_VERIFY_ARGS_JSON": "[]"})
+        forwarded.start()
+        self.addCleanup(forwarded.stop)
+
     def run_failed_tool(self, *, result=None, error=None):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
@@ -81,6 +87,43 @@ class DriverEvidenceChecks(unittest.TestCase):
         self.assertEqual(command["stdout"], "compiler stdout\n")
         self.assertEqual(command["stderr"], "compiler stderr\n")
         self.assertNotIn("timeout_seconds", command)
+
+    def test_source_archive_hashes_files_without_probing_an_unrelated_git_checkout(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / "README.md").write_text("archive source\n", encoding="utf-8")
+            failure = subprocess.CompletedProcess([sys.executable, "--version"], 3,
+                                                  stdout="", stderr="stop after source inspection")
+            with patch.object(driver, "ROOT", root), \
+                    patch.object(sys, "argv", ["verify.py"]), \
+                    patch.dict(os.environ, {"CLANK_VERIFY_ARGS_JSON": "[]"}), \
+                    patch.object(driver.shutil, "which", return_value="git"), \
+                    patch.object(driver, "compiler_for", return_value=(sys.executable, {}, "gnu")), \
+                    patch.object(driver.subprocess, "run", return_value=failure) as run, \
+                    redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+                self.assertEqual(driver.main(), 1)
+            run.assert_called_once()
+            self.assertEqual(run.call_args.args[0], [sys.executable, "--version"])
+            report_path = next((root / "build/milestone-1").glob("*/report.json"))
+            report = json.loads(report_path.read_text(encoding="utf-8"))
+            self.assertEqual(report["source_origin"], "source directory without checkout metadata")
+            self.assertEqual(report["source_sha256"], {"README.md": driver.sha256(root / "README.md")})
+            self.assertNotIn("head", report)
+
+    def test_forwarded_arguments_preserve_compiler_paths_without_shell_parsing(self):
+        chosen = []
+        def compiler(args):
+            chosen.append(args.cxx)
+            raise ValueError("stop after argument parsing")
+        with tempfile.TemporaryDirectory() as folder, \
+                patch.object(driver, "ROOT", Path(folder)), \
+                patch.object(sys, "argv", ["verify.py"]), \
+                patch.dict(os.environ, {"CLANK_VERIFY_ARGS_JSON": json.dumps(["--cxx", "path with & spaces/g++"])}), \
+                patch.object(driver.shutil, "which", return_value=None), \
+                patch.object(driver, "compiler_for", side_effect=compiler), \
+                redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+            self.assertEqual(driver.main(), 1)
+        self.assertEqual(chosen, ["path with & spaces/g++"])
 
 
 if __name__ == "__main__":

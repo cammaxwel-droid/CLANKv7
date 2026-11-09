@@ -92,8 +92,8 @@ that wrapper and snapshots are not implemented in milestone 1. Its raw words
 before exhaustion must match this frozen sequence.
 
 The existing `examples/example_utils.hpp` helper is preserved. It consumes a
-draw for a bound of one; it is not the future `clank-sampling-v1` API, whose
-approved shortcut consumes none. Helper versioning will protect that
+draw for a bound of one; it is not the implemented `clank-sampling-v1` API, whose
+approved shortcut consumes none. Separate helper versioning preserves that
 distinction in milestone 3.
 
 TriFlow is an experimental deterministic PRNG. This baseline establishes

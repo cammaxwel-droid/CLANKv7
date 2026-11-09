@@ -2,7 +2,8 @@
 
 Open `examples/clank_bench.html` in a modern browser with JavaScript, BigInt
 and structuredClone support. Everything runs locally. Keep the neighboring
-scripts and stylesheet with the HTML file. No installation or server is needed.
+scripts and stylesheet with the HTML file. This includes `seed_lab.js`,
+`chain_seed.js`, `clank_bench_model.js` and `clank_bench.js`. No installation or server is needed.
 
 On Windows, from this checkout:
 
@@ -12,7 +13,11 @@ Invoke-Item .\examples\clank_bench.html
 
 ## Inspect a draw
 
-Apply an unsigned 64-bit decimal seed or `0x` hexadecimal seed. The raw inspector
+Apply an unsigned 64-bit decimal seed or `0x` hexadecimal seed. Select original
+TriFlow or Chain v2 preprocessing. Chain mode accepts a generation written as
+exactly 16 lowercase hex digits without `0x`, and a stage mask from 0 through 7.
+The original seed is preserved in the report alongside the effective seed.
+The raw inspector
 starts paused after 64 draws. Next draw advances once, +128 draws advances a
 chunk, and Play stream reveals 16 draws at a time, capped at 30 updates per
 second and 4,096 raw draws. Replay applied seed starts the same sequence again.
@@ -29,7 +34,9 @@ The histogram covers all inspected words. Scatter uses overlapping adjacent
 pairs from the most recent 256 words, scaled by high32 / 2^32. The bit raster
 shows the latest 64 words, most significant bit at left. One-bit share counts
 all output bits. Seed-flip difference compares matched draw positions against
-another instance seeded with one selected bit toggled. An average near 32
+another instance with one bit of the original seed toggled before applying
+the same selected preprocessing. In Chain mode, both use identical generation
+and stage settings. An average near 32
 changed bits is an observation, not an established quality guarantee.
 
 ## Inspect reel mapping
@@ -73,14 +80,20 @@ threshold or a verified confidence interval for TriFlow.
 
 ## Export and replay
 
-Export report downloads JSON with the engine ID, canonical seed, flip bit,
+Export report downloads `clank-bench-report-v2` JSON with the engine ID,
+canonical seed, flip bit, preprocessing mode, generation, mask and both effective
+seeds,
 raw counts and aggregates, latest lane trace, last 256 raw words, reel totals,
 latest spin mapping, limits and exact theoretical counts. BigInts are written
-as fixed-width hexadecimal text. Exporting does not advance either stream.
+as fixed-width hexadecimal text. The preprocessing generation is 16 lowercase
+hex digits without `0x`, ready to paste into the generation input. Seed and
+effective-seed display fields retain their accepted `0x` prefix. Exporting does not advance either stream.
 
 Reports are diagnostic evidence, not the planned public RNG snapshot format.
 There is no report-import or save-state-restore feature. To reproduce locally,
-apply the recorded seed and bit, then advance to the recorded counts. Reloading
+apply the recorded original seed, bit and preprocessing configuration, then
+advance to the recorded counts. Version 1 reports predate Chain selection and
+describe original TriFlow mode. Reloading
 starts a fresh session. The page makes no network requests or persistent writes.
 
 ## Verification

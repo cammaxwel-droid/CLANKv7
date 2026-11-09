@@ -3,6 +3,7 @@
     const byId = id => document.getElementById(id);
     const lab = globalThis.ClankSeedLab;
     const bench = globalThis.ClankBench;
+    const chain = globalThis.ClankChainSeed;
     const format = new Intl.NumberFormat("en-AU");
     const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
     const hex = value => lab.hex64(value);
@@ -10,6 +11,7 @@
     let current;
     let appliedSeed;
     let appliedBit = 0;
+    let appliedSettings;
     let rawPlaying = false;
     let spinsRemaining = 0;
     let frameId = 0;
@@ -38,6 +40,8 @@
         spinsRemaining = 0;
         if (frameId) cancelAnimationFrame(frameId);
         frameId = 0;
+        if (resizeId) cancelAnimationFrame(resizeId);
+        resizeId = 0;
         lastFrame = 0;
     }
 
@@ -55,19 +59,38 @@
     }
 
     function draft() {
-        byId("draft").hidden = byId("seed").value === appliedSeed && byId("flip-bit").value === String(appliedBit);
+        byId("generation").disabled = byId("mode").value === "raw";
+        byId("chain-mask").disabled = byId("mode").value === "raw";
+        byId("draft").hidden = byId("seed").value === appliedSeed && byId("flip-bit").value === String(appliedBit)
+            && byId("mode").value === appliedSettings.mode
+            && (appliedSettings.mode === "raw" ||
+                (byId("generation").value === appliedSettings.generation.toString(16).padStart(16, "0")
+                 && byId("chain-mask").value === String(appliedSettings.mask)));
     }
 
-    function reset(seedText, bit) {
+    function readSettings() {
+        // Disabled Chain fields do not block applying an original-stream seed.
+        if (byId("mode").value === "raw") return { mode: "raw", generation: 0n, mask: 0 };
+        let generation;
+        try { generation = chain.parseGeneration(byId("generation").value); }
+        catch (error) { byId("generation").setAttribute("aria-invalid", "true"); throw error; }
+        const maskText = byId("chain-mask").value;
+        if (!/^[0-7]$/.test(maskText)) throw new RangeError("Choose a Chain stage combination from the list.");
+        return { mode: byId("mode").value, generation, mask: Number(maskText) };
+    }
+
+    function reset(seedText, bit, settings) {
         // Prepare and validate before replacing the current session.
-        const candidate = bench.session(lab.parseSeed(seedText), bit);
+        const candidate = bench.session(lab.parseSeed(seedText), bit, settings);
         candidate.advance(64);
         stop();
         current = candidate;
         appliedSeed = seedText;
         appliedBit = bit;
+        appliedSettings = { ...settings };
         byId("seed").removeAttribute("aria-invalid");
         byId("flip-bit").removeAttribute("aria-invalid");
+        byId("generation").removeAttribute("aria-invalid");
         byId("error").hidden = true;
         draft();
         render(true);
@@ -128,8 +151,8 @@
         const rect = canvas.parentElement.getBoundingClientRect();
         if (rect.width <= 0 || rect.height <= 0) return null;
         const ratio = Math.min(window.devicePixelRatio || 1, 2);
-        const width = Math.round(rect.width * ratio);
-        const height = Math.round(rect.height * ratio);
+        const width = Math.max(1, Math.round(rect.width * ratio));
+        const height = Math.max(1, Math.round(rect.height * ratio));
         if (canvas.width !== width) canvas.width = width;
         if (canvas.height !== height) canvas.height = height;
         const ctx = canvas.getContext("2d");
@@ -199,6 +222,9 @@
         const state = current.snapshot();
         byId("applied-seed").textContent = state.seed;
         byId("flipped-seed").textContent = state.flippedSeed;
+        byId("preprocessing-summary").textContent = state.preprocessing.mode === "raw"
+            ? "Original TriFlow. The original seed directly initializes the engine."
+            : `Chain v2 · generation ${state.preprocessing.generation} · stage mask ${state.preprocessing.mask} · effective seed ${state.preprocessing.effectiveSeed} · flipped effective seed ${state.preprocessing.effectiveFlippedSeed}.`;
         byId("raw-count").textContent = format.format(state.raw.count);
         const ones = state.raw.bitCounts.reduce((sum, value) => sum + value, 0);
         byId("ones").textContent = percent(ones / (64 * state.raw.count));
@@ -265,8 +291,8 @@
     }
 
     try {
-        if (!lab || !bench) throw new Error("Keep seed_lab.js and the CLANK Bench scripts beside this HTML file.");
-        reset(byId("seed").value, 0);
+        if (!lab || !bench || !chain) throw new Error("Keep seed_lab.js, chain_seed.js and the CLANK Bench scripts beside this HTML file.");
+        reset(byId("seed").value, 0, readSettings());
         byId("seed-form").addEventListener("submit", guarded(event => {
             event.preventDefault();
             try { lab.parseSeed(byId("seed").value); }
@@ -276,13 +302,17 @@
                 byId("flip-bit").setAttribute("aria-invalid", "true");
                 throw new RangeError("Choose a seed bit from 0 through 63.");
             }
-            reset(byId("seed").value, Number(text));
+            reset(byId("seed").value, Number(text), readSettings());
         }));
-        for (const id of ["seed", "flip-bit"]) byId(id).addEventListener("input", draft);
+        for (const id of ["seed", "flip-bit", "generation"]) byId(id).addEventListener("input", draft);
+        for (const id of ["mode", "chain-mask"]) byId(id).addEventListener("change", draft);
         byId("reset").addEventListener("click", guarded(() => {
             byId("seed").value = appliedSeed;
             byId("flip-bit").value = String(appliedBit);
-            reset(appliedSeed, appliedBit);
+            byId("mode").value = appliedSettings.mode;
+            byId("generation").value = appliedSettings.generation.toString(16).padStart(16, "0");
+            byId("chain-mask").value = String(appliedSettings.mask);
+            reset(appliedSeed, appliedBit, appliedSettings);
         }));
         byId("raw-next").addEventListener("click", guarded(() => { rawPlaying = false; current.advance(1); render(true); schedule(); }));
         byId("raw-step").addEventListener("click", guarded(() => { rawPlaying = false; current.advance(128); render(true); schedule(); }));
@@ -311,6 +341,6 @@
         byId("strips").replaceChildren(strips);
     } catch (error) {
         showError(error);
-        for (const control of document.querySelectorAll("input, button")) control.disabled = true;
+        for (const control of document.querySelectorAll("input, button, select")) control.disabled = true;
     }
 })();

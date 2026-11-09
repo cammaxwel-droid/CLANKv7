@@ -8,6 +8,7 @@
   <title>CLANK Bench · TriFlow</title>
   <link rel="stylesheet" href="clank_bench.css">
   <script src="seed_lab.js" defer></script>
+  <script src="chain_seed.js" defer></script>
   <script src="clank_bench_model.js" defer></script>
   <script src="clank_bench.js" defer></script>
 </head>
@@ -22,16 +23,22 @@
       <noscript><p class="error">Enable JavaScript to use this local workbench.</p></noscript>
       <p id="error" class="error" role="alert" hidden></p>
       <section class="panel setup" aria-labelledby="setup-title">
-        <div><p class="eyebrow">01 / SET THE EXPERIMENT</p><h2 id="setup-title">One seed. Repeatable results.</h2><p class="muted">Original TriFlow, with seed transformations off. Applying a seed restarts both diagnostic streams.</p></div>
+        <div><p class="eyebrow">01 / SET THE EXPERIMENT</p><h2 id="setup-title">One seed. Repeatable results.</h2><p class="muted">Inspect original TriFlow or the corrected Chain v2 preprocessing. Applying settings restarts both diagnostic streams.</p></div>
         <form id="seed-form" novalidate>
           <div><label for="seed">Unsigned 64-bit seed</label><input id="seed" value="0x0123456789abcdef" spellcheck="false" autocomplete="off" aria-describedby="seed-help draft"></div>
           <div class="bit-control"><label for="flip-bit">Compare seed bit</label><input id="flip-bit" type="number" min="0" max="63" step="1" value="0" aria-describedby="flip-help"></div>
           <button id="apply" type="submit">Apply seed</button>
           <p id="seed-help" class="help">Decimal or 0x hex. Full seeds and outputs remain exact BigInts.</p>
           <p id="flip-help" class="help">Compare with a second seed having this one bit flipped, from bit 0 to bit 63.</p>
+          <div class="chain-controls">
+            <div><label for="mode">Seed preprocessing</label><select id="mode" value="raw"><option value="raw">Original TriFlow</option><option value="chain-seed-v2">Chain v2</option></select></div>
+            <div><label for="generation">Chain generation</label><input id="generation" value="0000000000000000" spellcheck="false" autocomplete="off" aria-describedby="generation-help" disabled><p id="generation-help" class="help">Exactly 16 lowercase hex digits, without 0x.</p></div>
+            <div><label for="chain-mask">Chain stages</label><select id="chain-mask" value="7" disabled><option value="7" selected>Quadratic + Rotate + Cross-feed</option><option value="0">No optional stages</option><option value="1">Quadratic</option><option value="2">Rotate</option><option value="3">Quadratic + Rotate</option><option value="4">Reversible Cross-feed</option><option value="5">Quadratic + Cross-feed</option><option value="6">Rotate + Cross-feed</option></select></div>
+          </div>
           <p id="draft" class="help amber" hidden>Settings edited. The panels still show the applied seed.</p>
         </form>
         <div class="applied"><span>APPLIED <code id="applied-seed">—</code></span><span>FLIPPED <code id="flipped-seed">—</code></span><button id="reset" class="quiet" type="button">Replay applied seed</button><button id="export" class="quiet" type="button">Export report ↓</button></div>
+        <p id="preprocessing-summary" class="help">Original TriFlow seed.</p>
       </section>
 
       <section class="raw-section" aria-labelledby="raw-title">

@@ -1,8 +1,9 @@
-# TypeScript raw engine: milestone 2
+# TypeScript engine and sampling kit
 
 The TypeScript port reproduces the frozen `triflow-v1` C++ stream. The public
-entry point currently exports `createRng`, `ENGINE_ID`, and the `RawRng` type.
-It deliberately implements only the raw-engine milestone of the approved kit.
+entry point exports `createRng`, `ENGINE_ID`, `createSampler`, `SAMPLING_ID`,
+and the `RawRng`, `Sampler` and `WeightedItem` types. Raw-engine and helper
+contracts are versioned separately. See [Sampling v1](sampling-v1.md).
 
 After `npm.cmd run build`, this example works from a module in this repository:
 
@@ -91,25 +92,26 @@ refuses to overwrite existing files; ordinary verification only reads them.
 Full verification compares every one of **870,000 raw words per engine**
 between C++, Python and compiled TypeScript, not only the saved checkpoints.
 Its report includes canonical text-stream SHA-256 fingerprints per seed.
-Nine Node tests also cover the 28 original words, checkpoint agreement,
+Node tests also cover the 28 original words, checkpoint agreement,
 unsigned results, seed validation, instance isolation, immutable API,
 64-bit wrapping/rotation and averages near maximum values. Compile-time
 checks exercise the public declarations and reject numeric seeds and outputs.
 
 ## Current limits
 
-Observed acceptance is Windows AMD64 with Node **26.13.0**, Python **3.13.13**,
-MSVC **19.51.36260.0**, and the pinned TypeScript compiler. Browser and Electron
+Historical milestone acceptance was Windows AMD64 with Node **26.13.0**,
+Python **3.13.13** and MSVC **19.51.36260.0**. Current candidate acceptance
+is recorded in the [unified review](UNIFIED-CANDIDATE.md). Browser and Electron
 acceptance remain later work; an ES2020 build alone does not establish them.
 
 This raw prototype still wraps its counter like C++. Snapshots, direct
 large-position restoration and the `2^64` exhaustion marker arrive in milestone
-4. The planned `clank-sampling-v1` helpers arrive in milestone 3; no helper
-version is claimed by this raw-only API. Host entropy, game persistence,
-local archive acceptance, benchmarks and statistical suites are also pending.
+4. The `clank-sampling-v1` helpers are implemented and local archive consumption
+is checked separately. Host entropy, game persistence, direct restoration,
+exhaustion handling and broader statistical assessment remain future work.
 
 Package metadata is provisional: `@clankv7/rng@0.1.0-experimental.1`, private.
 The `UNLICENSED` npm marker grants no distribution licence; the owner's licence
-and public namespace decisions remain open. No archive or public publication
-is part of this milestone. These tests establish deterministic agreement,
+and public namespace decisions remain open. Local archive checks are part of this candidate. Public publication remains
+a separate decision. These tests establish deterministic agreement,
 not uniformity, security, true randomness or suitability for real-money use.

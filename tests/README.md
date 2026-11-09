@@ -1,3 +1,18 @@
+# Complete candidate checks
+
+Run `npm run verify` (`npm.cmd run verify` on Windows) for the integrated
+native, Python, TypeScript, backend and browser-model suites. It builds the
+native parity adapter and prevents the browser comparison from skipping.
+For source archives and evidence scope, see [development](../docs/development.md)
+and the [candidate review](../docs/UNIFIED-CANDIDATE.md).
+
+The common verifier also compiles/runs `chain_seed_test.cpp` and compares its
+64 fixed records and 512 downstream outputs with independent Python arithmetic
+in `reference/chain_seed_v2.py`. Chain tests cover both directions of every
+enabled stage combination, generation/replay, the former seed collision, and
+explicit errors for attempts to invert original lossy Cross-feed. See the
+[candidate contract](../docs/chain-seed-v2.md) for scope and compatibility.
+
 [`triflow_rng_test.cpp`](triflow_rng_test.cpp) checks:
 
 - The original fixed output vector, 10,000-output same-seed replay, and five
@@ -160,7 +175,7 @@ evidence fails, and that CRLF/LF checkout differences do not change identity.
 `reference/test_verify_driver.py` simulates tool timeouts and launch failures
 without running a compiler: reports must keep the attempted command, elapsed
 time, error, and any partial output. Ordinary nonzero-exit diagnostics are also
-protected. Run all ten Python tests alone from the repository root with:
+protected. Run the Python regression suite alone from the repository root with:
 
 ```powershell
 python -I -B -m unittest discover -s .\tests\reference -p test_*.py
@@ -168,9 +183,9 @@ python -I -B -m unittest discover -s .\tests\reference -p test_*.py
 
 The text adapter is bounded to one million raw draws per invocation and emits
 one lowercase, 16-digit hexadecimal word per line. It is not the planned
-binary statistics adapter or the future public sampling API. In particular,
+binary statistics adapter or the public sampling API. In particular,
 the preserved C++ example helper's one-bound draw behaviour differs from the
-approved future helper version; see the [v1 contract](../docs/triflow-v1.md).
+implemented clank-sampling-v1 helper version; see the [v1 contract](../docs/triflow-v1.md).
 
 Milestone 1 establishes deterministic reproduction on recorded Windows hosts.
 It adds no statistical certification, browser/Electron acceptance or gameplay
@@ -181,7 +196,7 @@ persistence evidence.
 After installing the pinned development tools with
 `npm.cmd ci --ignore-scripts --no-audit --no-fund`, use `npm.cmd run verify`.
 This includes the original C++/Python suites, the existing four verifier
-failure-evidence tests, strict declaration checks and nine Node engine tests.
+failure-evidence tests, strict declaration checks and raw engine and sampling tests.
 `npm.cmd test` runs the TypeScript/Node part alone.
 
 The new `triflow-v1-checkpoints.json` fixture covers 87 ordered seeds and 12

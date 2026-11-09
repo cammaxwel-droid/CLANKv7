@@ -110,4 +110,6 @@ int main(int argc, char* argv[]) {
                   << "disabled-stage compatibility, stage order, and a documented collision.\n"
                   << "These equations do not create entropy or certify output quality.\n";
     }
+    std::cout.flush();
+    return std::cout ? 0 : 1;
 }

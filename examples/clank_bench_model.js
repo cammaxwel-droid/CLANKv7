@@ -3,6 +3,8 @@
 
     const lab = typeof module !== "undefined" && module.exports
         ? require("./seed_lab.js") : root.ClankSeedLab;
+    const chain = typeof module !== "undefined" && module.exports
+        ? require("./chain_seed.js") : root.ClankChainSeed;
     const RANGE = 1n << 64n;
     const MAX_RAW = 4096;
     const MAX_SPINS = 100000;
@@ -65,15 +67,28 @@
         return count;
     }
 
-    function session(seed, flipBit = 0) {
+    function session(seed, flipBit = 0, settings = {}) {
         lab.hex64(seed);
+        if (settings === null || typeof settings !== "object" || Array.isArray(settings)) {
+            throw new TypeError("Bench settings must be an object.");
+        }
         if (!Number.isInteger(flipBit) || flipBit < 0 || flipBit > 63) {
             throw new RangeError("Choose a seed bit from 0 through 63.");
         }
-        const raw = new lab.TriFlowRng(seed);
+        const mode = settings.mode === undefined ? "raw" : settings.mode;
+        if (mode !== "raw" && mode !== chain.engineId) {
+            throw new RangeError("Choose original TriFlow or chain-seed-v2 preprocessing.");
+        }
+        const generation = settings.generation === undefined ? 0n : settings.generation;
+        const mask = settings.mask === undefined ? 0 : settings.mask;
+        // Validate all supplied settings even when original mode bypasses them.
+        const repairedSeed = chain.repair(seed, generation, mask);
+        const effectiveSeed = mode === "raw" ? seed : repairedSeed;
         const flippedSeed = seed ^ (1n << BigInt(flipBit));
-        const alternate = new lab.TriFlowRng(flippedSeed);
-        const reelRng = new lab.TriFlowRng(seed);
+        const effectiveFlippedSeed = mode === "raw" ? flippedSeed : chain.repair(flippedSeed, generation, mask);
+        const raw = new lab.TriFlowRng(effectiveSeed);
+        const alternate = new lab.TriFlowRng(effectiveFlippedSeed);
+        const reelRng = new lab.TriFlowRng(effectiveSeed);
         const words = [];
         const histogram = Array(32).fill(0);
         const bitCounts = Array(64).fill(0);
@@ -136,8 +151,10 @@
 
         function snapshot() {
             return structuredClone({
-                format: "clank-bench-report-v1", engine: "triflow-v1",
+                format: "clank-bench-report-v2", engine: "triflow-v1",
                 seed: lab.hex64(seed), flipBit, flippedSeed: lab.hex64(flippedSeed),
+                preprocessing: { mode, generation: generation.toString(16).padStart(16, "0"), mask,
+                    effectiveSeed: lab.hex64(effectiveSeed), effectiveFlippedSeed: lab.hex64(effectiveFlippedSeed) },
                 raw: { count: words.length, histogram: histogram.slice(), bitCounts: bitCounts.slice(),
                     repeated, meanChangedBits: words.length ? bitChanges / words.length : null,
                     trace, tail: words.slice(-256) },

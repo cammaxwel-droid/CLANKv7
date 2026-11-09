@@ -4,6 +4,7 @@ const assert = require("node:assert/strict");
 const { test } = require("node:test");
 const lab = require("../examples/seed_lab.js");
 const bench = require("../examples/clank_bench_model.js");
+const chain = require("../examples/chain_seed.js");
 const fixture = require("./fixtures/triflow-v1.json");
 const MAX = (1n << 64n) - 1n;
 const seed = 0x0123456789abcdefn;
@@ -151,4 +152,43 @@ test("session limits bound retained data and invalid controls preserve state", (
     assert.equal(Object.values(state.reels.payouts).reduce((sum, count) => sum + count, 0), 100000);
     assert.equal(state.reels.payouts[4] * 4 + state.reels.payouts[8] * 8 + state.reels.payouts[32] * 32, state.reels.gross);
     for (const stops of state.reels.stops) assert.equal(stops.reduce((sum, count) => sum + count, 0), 100000);
+});
+
+test("browser Chain v2 exactly reproduces all native fixed records and 512 downstream words", () => {
+    const fixture = require("./fixtures/chain-seed-v2.json");
+    assert.equal(chain.engineId, fixture.engine);
+    assert.equal(fixture.records.length, 64);
+    for (const record of fixture.records) {
+        const [seedText, generationText, modeText, preparedText, recoveredText, effectiveText, ...outputs] = record.split(" ");
+        const seed = BigInt("0x" + seedText);
+        const generation = chain.parseGeneration(generationText);
+        const mask = Number(modeText);
+        const prepared = chain.prepare(seed, mask);
+        assert.equal(prepared, BigInt("0x" + preparedText));
+        assert.equal(chain.invert(prepared, mask), BigInt("0x" + recoveredText));
+        const effective = chain.repair(seed, generation, mask);
+        assert.equal(effective, BigInt("0x" + effectiveText));
+        const rng = new lab.TriFlowRng(effective);
+        assert.deepEqual(outputs.map(() => rng.next()), outputs.map(word => BigInt("0x" + word)));
+        const experiment = bench.session(seed, 0, { mode: chain.engineId, generation, mask });
+        experiment.advance(8);
+        const snapshot = experiment.snapshot();
+        assert.deepEqual(snapshot.raw.tail, outputs.map(word => BigInt("0x" + word)));
+        assert.equal(snapshot.preprocessing.effectiveSeed, "0x" + effectiveText);
+    }
+});
+
+test("Chain inputs reject rounding/coercion and preserve the old lossy comparison separately", () => {
+    for (const text of ["", "0", "0000000000000000\n", "0xffffffffffffffff", "FFFFFFFFFFFFFFFF", 0n, 0]) {
+        assert.throws(() => chain.parseGeneration(text), RangeError);
+    }
+    for (const bad of [-1n, 1n << 64n, 0, "0", null]) {
+        assert.throws(() => chain.prepare(bad, 7), RangeError);
+        assert.throws(() => chain.repair(0n, bad, 7), RangeError);
+    }
+    for (const bad of [-1, 8, 0.5, "7", null]) assert.throws(() => chain.prepare(seed, bad), RangeError);
+    for (const settings of [null, [], "raw"]) assert.throws(() => bench.session(seed, 0, settings), TypeError);
+    assert.throws(() => bench.session(seed, 0, { mode: "unknown" }), RangeError);
+    assert.equal(lab.deriveSeed(0n, 4).effectiveSeed, lab.deriveSeed(MAX, 4).effectiveSeed);
+    assert.notEqual(chain.repair(0n, 0n, 4), chain.repair(MAX, 0n, 4));
 });

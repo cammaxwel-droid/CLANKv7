@@ -146,11 +146,11 @@ label {
   margin-bottom:7px;
 }
 
-input,button {
+input,button,select {
   font:inherit;
 }
 
-input {
+input,select {
   width:100%;
   min-width:0;
   min-height:45px;
@@ -159,6 +159,18 @@ input {
   border-radius:8px;
   color:var(--ink);
   padding:10px 12px;
+}
+
+.chain-controls {
+  grid-column:1 / -1;
+  display:grid;
+  grid-template-columns:minmax(150px,1fr) minmax(190px,1fr) minmax(200px,1.4fr);
+  gap:16px;
+  align-items:start;
+}
+
+select:disabled,input:disabled {
+  opacity:.55;
 }
 
 input#seed {
@@ -506,6 +518,9 @@ footer {
 }
 
 @media(max-width:640px) {
+  .chain-controls {
+    grid-template-columns:minmax(0,1fr);
+  }
   .shell {
     padding:22px 16px;
   }
