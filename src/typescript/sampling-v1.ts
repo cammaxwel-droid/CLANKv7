@@ -1,4 +1,4 @@
-import { ENGINE_ID, type RawRng } from "./triflow-v1.js";
+import type { RawRng } from "./triflow-v1.js";
 
 export const SAMPLING_ID = "clank-sampling-v1" as const;
 
@@ -41,10 +41,10 @@ function positiveBound(value: number, name: string): bigint {
 /** Add versioned game-sampling helpers around an unchanged raw RNG. */
 export function createSampler(rng: RawRng): Sampler {
     if (rng === null || typeof rng !== "object") {
-        throw new TypeError("rng must be a triflow-v1 raw RNG");
+        throw new TypeError("rng must be a raw RNG object");
     }
-    if (rng.engineId !== ENGINE_ID || typeof rng.nextUint64 !== "function") {
-        throw new TypeError("rng must be a triflow-v1 raw RNG");
+    if (typeof rng.engineId !== "string" || typeof rng.nextUint64 !== "function") {
+        throw new TypeError("rng must expose engineId and nextUint64()");
     }
 
     function drawWord(): bigint {

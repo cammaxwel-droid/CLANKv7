@@ -229,9 +229,10 @@ test("shuffle uses Fisher-Yates on a copy and skips zero/one-item draws", () => 
     assert.equal(raw.calls, 2);
 });
 
-test("sampler requires the versioned raw engine and validates raw words", () => {
+test("sampler requires a raw RNG shape and validates raw words", () => {
     assert.throws(() => createSampler(null), TypeError);
-    assert.throws(() => createSampler({ engineId: "other", nextUint64() { return 0n; } }), TypeError);
+    assert.throws(() => createSampler({ engineId: 1, nextUint64() { return 0n; } }), TypeError);
+    assert.throws(() => createSampler({ engineId: "other" }), TypeError);
     for (const word of [-1n, 1n << 64n, "0"]) {
         const sampler = createSampler({ engineId: ENGINE_ID, nextUint64() { return word; } });
         assert.throws(() => sampler.intBelow(2), typeof word === "string" ? TypeError : RangeError);

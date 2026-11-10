@@ -1,15 +1,18 @@
 import {
-    createRng, createSampler, ENGINE_ID, SAMPLING_ID, type RawRng, type Sampler
+    createRng, createSampler, ENGINE_ID, NOVA_ENGINE_ID, SAMPLING_ID,
+    type EngineId, type RawRng, type Sampler
 } from "@clankv7/rng";
 
-const rng: RawRng = createRng("0123456789abcdef");
+const rng = createRng("0123456789abcdef");
 const word: bigint = rng.nextUint64();
 const engine: "triflow-v1" = rng.engineId;
 const constant: "triflow-v1" = ENGINE_ID;
 const sampler: Sampler = createSampler(rng);
 const sampling: "clank-sampling-v1" = sampler.samplingId;
 const roll: number = sampler.intBelow(6);
-void [word, engine, constant, sampling, roll, SAMPLING_ID];
+const nova: RawRng = createRng("0123456789abcdef", { engine: NOVA_ENGINE_ID });
+const novaEngine: EngineId = nova.engineId;
+void [word, engine, constant, sampling, roll, SAMPLING_ID, novaEngine];
 
 // Full seeds and outputs must never be JavaScript numbers.
 // @ts-expect-error Seed requires hexadecimal text.
